@@ -106,7 +106,7 @@ st.markdown("""
     /* Buttons with kawaii style */
     .stButton > button {
         background: linear-gradient(45deg, #ff1493, #ff69b4) !important;
-        color: #ffffff !important;
+        color: #1a1a2e !important;
         border-radius: 20px;
         border: none;
         padding: 0.5rem 2rem;
@@ -114,6 +114,7 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(255, 105, 180, 0.4);
         transition: all 0.3s ease;
         font-family: 'Comic Sans MS', cursive;
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
     }
     
     .stButton > button:hover {
@@ -121,6 +122,7 @@ st.markdown("""
         background: linear-gradient(45deg, #ff69b4, #ff1493) !important;
         box-shadow: 0 6px 20px rgba(255, 105, 180, 0.6);
         animation: bounce 0.5s ease;
+        color: #1a1a2e !important;
     }
     
     /* Text colors for dark mode */
