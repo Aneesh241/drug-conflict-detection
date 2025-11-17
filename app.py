@@ -360,7 +360,18 @@ def get_severity_color(severity):
 
 # Add floating kawaii decorations
 st.markdown("""
-    <div class="kawaii-decoration" style="top: 10%; left: 5%;">🐱</div>
+    <div class="kawaii-decoration" style="top: 10%; left: 5%;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 4C8 2.89543 7.10457 2 6 2C4.89543 2 4 2.89543 4 4C4 5.10457 4.89543 6 6 6C7.10457 6 8 5.10457 8 4Z" fill="#ff69b4"/>
+            <path d="M20 4C20 2.89543 19.1046 2 18 2C16.8954 2 16 2.89543 16 4C16 5.10457 16.8954 6 18 6C19.1046 6 20 5.10457 20 4Z" fill="#ff69b4"/>
+            <path d="M12 22C16.4183 22 20 18.4183 20 14V8C20 7.44772 19.5523 7 19 7H5C4.44772 7 4 7.44772 4 8V14C4 18.4183 7.58172 22 12 22Z" fill="#ff69b4"/>
+            <circle cx="9" cy="12" r="1" fill="#1a1a2e"/>
+            <circle cx="15" cy="12" r="1" fill="#1a1a2e"/>
+            <path d="M10 15C10 15.5523 10.4477 16 11 16H13C13.5523 16 14 15.5523 14 15" stroke="#1a1a2e" stroke-width="1.5" stroke-linecap="round"/>
+            <ellipse cx="7" cy="13" rx="0.5" ry="1" fill="#ffb6c1"/>
+            <ellipse cx="17" cy="13" rx="0.5" ry="1" fill="#ffb6c1"/>
+        </svg>
+    </div>
     <div class="kawaii-decoration" style="top: 15%; right: 8%; animation-delay: 0.5s;">💕</div>
     <div class="kawaii-decoration" style="top: 25%; left: 10%; animation-delay: 1s;">🎀</div>
     <div class="kawaii-decoration" style="top: 40%; right: 5%; animation-delay: 1.5s;">✨</div>
