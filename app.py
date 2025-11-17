@@ -15,57 +15,25 @@ from utils import read_csv_records
 
 # Page configuration
 st.set_page_config(
-    page_title="🎀 Kitty Drug Checker 🐱",
-    page_icon="🐱",
+    page_title="🐱 Kawaii Drug Checker Nyan~ 💊",
+    page_icon="🎀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS - Hello Kitty Theme
+# Custom CSS - Hello Kitty Dark Mode Theme
 st.markdown("""
     <style>
-    /* Import cute fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-    
-    /* Global styling */
-    * {
-        font-family: 'Poppins', sans-serif !important;
-    }
-    
-    /* Background and main colors */
+    /* Dark mode background with kawaii colors */
     .stApp {
-        background: linear-gradient(135deg, #FFE5E5 0%, #FFF0F5 50%, #FFE5F5 100%) !important;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+        background-attachment: fixed;
     }
     
-    /* Animated floating hearts background */
-    .stApp::before {
-        content: "💕 🎀 🐱 ✨ 💖 🌸 🎀 🐱";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        font-size: 2rem;
-        opacity: 0.1;
-        animation: float 20s infinite;
-        z-index: -1;
-    }
-    
+    /* Animated floating hearts */
     @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-    }
-    
-    /* Header styling */
-    .main-header {
-        font-size: 3rem;
-        font-weight: 700;
-        background: linear-gradient(45deg, #FF69B4, #FFB6C1, #FF1493);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: center;
-        margin-bottom: 2rem;
-        text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.3);
-        animation: bounce 2s infinite;
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
     }
     
     @keyframes bounce {
@@ -73,157 +41,170 @@ st.markdown("""
         50% { transform: translateY(-10px); }
     }
     
-    /* Sidebar styling */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #FFB6C1 0%, #FFE5E5 100%) !important;
-        border-right: 3px solid #FF69B4;
+    @keyframes sparkle {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
     }
     
-    /* Metric cards */
+    /* Main header with kawaii pink gradient */
+    .main-header {
+        font-size: 3rem;
+        font-weight: bold;
+        background: linear-gradient(45deg, #ff69b4, #ffb6c1, #ff69b4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 2rem;
+        animation: sparkle 2s ease-in-out infinite;
+        text-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+        font-family: 'Comic Sans MS', cursive;
+    }
+    
+    /* Kawaii metric cards */
     .metric-card {
-        background: linear-gradient(135deg, #FFE5F5, #FFF0F5);
+        background: linear-gradient(135deg, #2d2d44 0%, #3d3d5c 100%);
         padding: 1.5rem;
         border-radius: 20px;
         text-align: center;
-        border: 3px solid #FFB6C1;
-        box-shadow: 0 8px 16px rgba(255, 105, 180, 0.2);
-        transition: transform 0.3s ease;
+        border: 2px solid #ff69b4;
+        box-shadow: 0 8px 16px rgba(255, 105, 180, 0.3);
+        animation: float 3s ease-in-out infinite;
     }
     
-    .metric-card:hover {
-        transform: scale(1.05) rotate(2deg);
-        box-shadow: 0 12px 24px rgba(255, 105, 180, 0.3);
-    }
-    
-    /* Conflict cards with cat images from http.cat */
+    /* Conflict cards with cat theme */
     .conflict-major {
-        background: linear-gradient(135deg, #FFE5E5, #FFD5D5);
+        background: linear-gradient(135deg, #4a1f2e 0%, #3d1a26 100%);
         padding: 1rem;
-        border-left: 6px solid #FF1493;
+        border-left: 6px solid #ff69b4;
         border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(255, 20, 147, 0.2);
-        margin: 1rem 0;
+        margin: 0.5rem 0;
+        box-shadow: 0 4px 8px rgba(255, 105, 180, 0.4);
     }
-    
     .conflict-moderate {
-        background: linear-gradient(135deg, #FFF5E5, #FFE5D5);
+        background: linear-gradient(135deg, #4a3a1f 0%, #3d2f1a 100%);
         padding: 1rem;
-        border-left: 6px solid #FFB6C1;
+        border-left: 6px solid #ffb6c1;
         border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(255, 182, 193, 0.2);
-        margin: 1rem 0;
+        margin: 0.5rem 0;
+        box-shadow: 0 4px 8px rgba(255, 182, 193, 0.4);
     }
-    
     .conflict-minor {
-        background: linear-gradient(135deg, #FFFAE5, #FFF5E5);
+        background: linear-gradient(135deg, #3a4a1f 0%, #2f3d1a 100%);
         padding: 1rem;
-        border-left: 6px solid #FFD700;
+        border-left: 6px solid #dda0dd;
         border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
-        margin: 1rem 0;
+        margin: 0.5rem 0;
+        box-shadow: 0 4px 8px rgba(221, 160, 221, 0.4);
     }
     
-    /* Buttons */
-    .stButton>button {
-        background: linear-gradient(45deg, #FF69B4, #FF1493) !important;
-        color: white !important;
-        border-radius: 25px !important;
-        border: none !important;
-        padding: 0.5rem 2rem !important;
-        font-weight: 600 !important;
-        box-shadow: 0 4px 12px rgba(255, 105, 180, 0.4) !important;
-        transition: all 0.3s ease !important;
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #2d2d44 0%, #1a1a2e 100%);
+        border-right: 3px solid #ff69b4;
     }
     
-    .stButton>button:hover {
-        transform: scale(1.1) !important;
-        box-shadow: 0 6px 20px rgba(255, 105, 180, 0.6) !important;
+    /* Buttons with kawaii style */
+    .stButton > button {
+        background: linear-gradient(45deg, #ff69b4, #ffb6c1);
+        color: white;
+        border-radius: 20px;
+        border: none;
+        padding: 0.5rem 2rem;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(255, 105, 180, 0.4);
+        transition: all 0.3s ease;
+        font-family: 'Comic Sans MS', cursive;
     }
     
-    /* Tabs */
+    .stButton > button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(255, 105, 180, 0.6);
+        animation: bounce 0.5s ease;
+    }
+    
+    /* Text colors for dark mode */
+    h1, h2, h3, h4, h5, h6, p, span, div, label {
+        color: #ffb6c1 !important;
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        background: linear-gradient(135deg, #2d2d44 0%, #3d3d5c 100%);
+        border-radius: 15px;
+        border: 2px solid #ff69b4;
+        color: #ffb6c1 !important;
+        font-family: 'Comic Sans MS', cursive;
+    }
+    
+    /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 1rem;
-        background-color: #FFE5F5;
+        background-color: #2d2d44;
         border-radius: 15px;
         padding: 0.5rem;
     }
     
     .stTabs [data-baseweb="tab"] {
-        background: linear-gradient(135deg, #FFB6C1, #FFE5E5);
-        border-radius: 15px;
-        color: #FF1493;
-        font-weight: 600;
-        border: 2px solid #FF69B4;
+        color: #ffb6c1;
+        border-radius: 10px;
+        font-family: 'Comic Sans MS', cursive;
     }
     
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #FF69B4, #FF1493) !important;
+        background: linear-gradient(45deg, #ff69b4, #ffb6c1);
         color: white !important;
     }
     
-    /* Expanders */
-    .streamlit-expanderHeader {
-        background: linear-gradient(135deg, #FFE5F5, #FFF0F5) !important;
-        border-radius: 15px !important;
-        border: 2px solid #FFB6C1 !important;
-        font-weight: 600 !important;
+    /* Dataframe styling */
+    .stDataFrame {
+        border: 2px solid #ff69b4;
+        border-radius: 15px;
+        overflow: hidden;
     }
     
     /* Input fields */
-    .stTextInput>div>div>input, .stSelectbox>div>div>div {
-        border-radius: 15px !important;
-        border: 2px solid #FFB6C1 !important;
-        background-color: #FFF0F5 !important;
+    .stTextInput > div > div > input,
+    .stSelectbox > div > div,
+    .stMultiSelect > div > div {
+        background-color: #2d2d44 !important;
+        color: #ffb6c1 !important;
+        border: 2px solid #ff69b4 !important;
+        border-radius: 10px !important;
     }
     
-    /* Dataframe */
-    .dataframe {
-        border-radius: 15px !important;
-        border: 3px solid #FFB6C1 !important;
+    /* Bongo Cat Container */
+    .bongo-cat {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 999;
+        animation: bounce 2s ease-in-out infinite;
     }
     
-    /* Radio buttons */
-    .stRadio>div {
-        background: linear-gradient(135deg, #FFE5F5, #FFF0F5);
-        padding: 1rem;
-        border-radius: 15px;
-        border: 2px solid #FFB6C1;
+    /* Floating decorations */
+    .kawaii-decoration {
+        position: fixed;
+        font-size: 2rem;
+        animation: float 4s ease-in-out infinite;
+        opacity: 0.6;
+        pointer-events: none;
     }
     
-    /* Multiselect */
-    .stMultiSelect>div>div>div {
-        background-color: #FFF0F5 !important;
-        border-radius: 15px !important;
-        border: 2px solid #FFB6C1 !important;
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 12px;
     }
     
-    /* Success/Error/Info boxes */
-    .stSuccess, .stError, .stWarning, .stInfo {
-        border-radius: 15px !important;
-        border-left: 6px solid #FF69B4 !important;
+    ::-webkit-scrollbar-track {
+        background: #1a1a2e;
     }
     
-    /* Sparkles effect */
-    @keyframes sparkle {
-        0%, 100% { opacity: 0; }
-        50% { opacity: 1; }
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #ff69b4, #ffb6c1);
+        border-radius: 10px;
     }
     
-    .sparkle {
-        animation: sparkle 1.5s infinite;
-    }
-    
-    /* Cat paw prints */
-    .paw-print {
-        font-size: 1.5rem;
-        opacity: 0.3;
-        position: absolute;
-        animation: fadeInOut 3s infinite;
-    }
-    
-    @keyframes fadeInOut {
-        0%, 100% { opacity: 0.1; }
-        50% { opacity: 0.3; }
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #ffb6c1, #ff69b4);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -367,108 +348,78 @@ def get_severity_color(severity):
     }
     return colors.get(severity, '#757575')
 
+# Add floating kawaii decorations
+st.markdown("""
+    <div class="kawaii-decoration" style="top: 10%; left: 5%;">🐱</div>
+    <div class="kawaii-decoration" style="top: 15%; right: 8%; animation-delay: 0.5s;">💕</div>
+    <div class="kawaii-decoration" style="top: 25%; left: 10%; animation-delay: 1s;">🎀</div>
+    <div class="kawaii-decoration" style="top: 40%; right: 5%; animation-delay: 1.5s;">✨</div>
+    <div class="kawaii-decoration" style="top: 60%; left: 3%; animation-delay: 2s;">🌸</div>
+    <div class="kawaii-decoration" style="top: 70%; right: 10%; animation-delay: 2.5s;">🐾</div>
+    <div class="kawaii-decoration" style="top: 85%; left: 8%; animation-delay: 3s;">💊</div>
+""", unsafe_allow_html=True)
+
+# Bongo Cat Animation
+st.markdown("""
+    <div class="bongo-cat">
+        <img src="https://media.tenor.com/lRZ-eMLbGt8AAAAi/bongo-cat-transparent.gif" width="150" alt="Bongo Cat">
+    </div>
+""", unsafe_allow_html=True)
+
 # Sidebar
 with st.sidebar:
-    # Hello Kitty image
-    st.markdown("""
-        <div style='text-align: center;'>
-            <img src='https://http.cat/200' width='150' style='border-radius: 20px; border: 3px solid #FF69B4;'/>
-            <h2 style='color: #FF1493; margin-top: 1rem;'>🎀 Kitty Menu 🐱</h2>
-        </div>
-    """, unsafe_allow_html=True)
+    st.image("https://i.pinimg.com/originals/61/81/a5/6181a52c74e90273a071eca038e7fa6e.gif", width=100)
+    st.title("🐱 Meow Navigation Nyan~")
     
     page = st.radio(
-        "🌸 Navigate:",
-        ["🏠 Dashboard", "🐱 Patients", "💊 Prescription Simulator", "⚠️ Conflicts", "🎀 Drug Database", "⚙️ Rules Engine", "🧪 Manual Testing", "📁 Import Data"]
+        "Select Page:",
+        ["🏠 Dashboard", "👥 Patients", "💉 Prescription Simulator", "⚠️ Conflicts", "💊 Drug Database", "⚙️ Rules Engine", "🧪 Manual Testing", "📁 Import Data"]
     )
     
     st.divider()
     
     # Quick Actions
-    st.subheader("✨ Quick Actions ✨")
-    if st.button("🔄 Run Simulation 🎀", use_container_width=True, type="primary"):
-        with st.spinner("🐱 Meow! Running simulation..."):
+    st.subheader("✨ Quick Actions")
+    if st.button("🔄 Run Simulation Nyan~", use_container_width=True, type="primary"):
+        with st.spinner("Running simulation... 🐱✨"):
             run_simulation()
-        st.success("🎉 Simulation completed! Nya~ 🐱")
+        st.success("Simulation completed! ฅ^•ﻌ•^ฅ")
         st.rerun()
     
     if st.session_state.simulation_run:
-        st.info(f"🕐 Last run: {st.session_state.last_run}")
+        st.info(f"💕 Last run: {st.session_state.last_run}")
     
-    # Add cute cat facts
-    st.markdown("---")
-    st.markdown("""
-        <div style='background: linear-gradient(135deg, #FFE5F5, #FFF0F5); padding: 1rem; border-radius: 15px; border: 2px solid #FFB6C1;'>
-            <p style='text-align: center; font-size: 0.9rem; color: #FF1493;'>
-                😸 Did you know? Cats spend 70% of their lives sleeping! 💤
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Add cute cat image
+    st.divider()
+    st.image("https://http.cat/200", caption="Everything is purr-fect! 🐱", use_column_width=True)
 
-# Main content area with animated header
-st.markdown("""
-    <div class="main-header">
-        🎀 Kitty Drug Checker 🐱✨
-        <div style='font-size: 1rem; color: #FF69B4; font-weight: normal; margin-top: 0.5rem;'>
-            Making healthcare kawaii, one prescription at a time! 💕
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+# Main content area
+st.markdown('<div class="main-header">🐱💊 Kawaii Drug Conflict Checker Nyan~ 💕✨</div>', unsafe_allow_html=True)
 
 # ============= DASHBOARD PAGE =============
 if page == "🏠 Dashboard":
-    st.markdown("## 📊 Dashboard Nya~verview 🐱")
+    st.header("📊 Dashboard Overview ฅ^•ﻌ•^ฅ")
     
     # Load basic data
     patients_data, drugs_data, rules_data = load_data()
     
-    # Top metrics with cat images
+    # Top metrics
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.markdown(f"""
-            <div class="metric-card">
-                <img src='https://http.cat/100' width='60' style='border-radius: 10px;'/>
-                <h3 style='color: #FF1493; margin: 0.5rem 0;'>{len(patients_data)}</h3>
-                <p style='color: #FF69B4; font-weight: 600;'>Total Patients 🐱</p>
-            </div>
-        """, unsafe_allow_html=True)
+        st.metric("Total Patients", len(patients_data))
     
     with col2:
-        st.markdown(f"""
-            <div class="metric-card">
-                <img src='https://http.cat/201' width='60' style='border-radius: 10px;'/>
-                <h3 style='color: #FF1493; margin: 0.5rem 0;'>{len(drugs_data)}</h3>
-                <p style='color: #FF69B4; font-weight: 600;'>Available Drugs 💊</p>
-            </div>
-        """, unsafe_allow_html=True)
+        st.metric("Available Drugs", len(drugs_data))
     
     with col3:
-        st.markdown(f"""
-            <div class="metric-card">
-                <img src='https://http.cat/202' width='60' style='border-radius: 10px;'/>
-                <h3 style='color: #FF1493; margin: 0.5rem 0;'>{len(rules_data)}</h3>
-                <p style='color: #FF69B4; font-weight: 600;'>Active Rules ⚙️</p>
-            </div>
-        """, unsafe_allow_html=True)
+        st.metric("Active Rules", len(rules_data))
     
     with col4:
         if st.session_state.simulation_run:
-            st.markdown(f"""
-                <div class="metric-card">
-                    <img src='https://http.cat/203' width='60' style='border-radius: 10px;'/>
-                    <h3 style='color: #FF1493; margin: 0.5rem 0;'>{len(st.session_state.conflicts_df)}</h3>
-                    <p style='color: #FF69B4; font-weight: 600;'>Conflicts Detected ⚠️</p>
-                </div>
-            """, unsafe_allow_html=True)
+            st.metric("Conflicts Detected", len(st.session_state.conflicts_df))
         else:
-            st.markdown("""
-                <div class="metric-card">
-                    <img src='https://http.cat/404' width='60' style='border-radius: 10px;'/>
-                    <h3 style='color: #FF1493; margin: 0.5rem 0;'>?</h3>
-                    <p style='color: #FF69B4; font-weight: 600;'>Run simulation 🔄</p>
-                </div>
-            """, unsafe_allow_html=True)
+            st.metric("Conflicts Detected", "Run simulation")
     
     st.divider()
     
@@ -535,8 +486,8 @@ if page == "🏠 Dashboard":
         st.info("👆 Click 'Run Simulation' in the sidebar to see results")
 
 # ============= PATIENTS PAGE =============
-elif page == "🐱 Patients":
-    st.markdown("## 🐱 Meow-nagement (Patient Profiles) 💕")
+elif page == "👥 Patients":
+    st.header("👥 Patient Meow-nagement 🐾")
     
     patients_data, _, _ = load_data()
     
@@ -605,8 +556,8 @@ elif page == "🐱 Patients":
                         st.markdown(f"- 💊 {drug}")
 
 # ============= PRESCRIPTION SIMULATOR PAGE =============
-elif page == "💊 Prescription Simulator":
-    st.markdown("## 💊 Kitty's Prescription Lab 🧪✨")
+elif page == "Prescription Simulator":
+    st.header("� Prescription Simulation")
     
     if not st.session_state.simulation_run:
         st.warning("No simulation has been run yet. Click 'Run Simulation' in the sidebar.")
@@ -651,7 +602,7 @@ elif page == "💊 Prescription Simulator":
 
 # ============= CONFLICTS PAGE =============
 elif page == "⚠️ Conflicts":
-    st.markdown("## ⚠️ Conflict Meow-nitoring 🐱💔")
+    st.header("⚠️ Conflict Detection Results 🐱💔")
     
     if not st.session_state.simulation_run:
         st.warning("No simulation has been run yet. Click 'Run Simulation' in the sidebar.")
@@ -735,8 +686,8 @@ elif page == "⚠️ Conflicts":
             )
 
 # ============= DRUG DATABASE PAGE =============
-elif page == "🎀 Drug Database":
-    st.markdown("## 🎀 Kitty's Medicine Cabinet 💊✨")
+elif page == "💊 Drug Database":
+    st.header("💊 Drug Database Meow~ 🐾")
     
     _, drugs_data, _ = load_data()
     
@@ -773,7 +724,7 @@ elif page == "🎀 Drug Database":
 
 # ============= RULES ENGINE PAGE =============
 elif page == "⚙️ Rules Engine":
-    st.markdown("## ⚙️ Kitty's Rule Book 📖🐱")
+    st.header("⚙️ Conflict Detection Rules Nyan~ ✨")
     
     _, _, rules_data = load_data()
     
@@ -818,7 +769,7 @@ elif page == "⚙️ Rules Engine":
 
 # ============= MANUAL TESTING PAGE =============
 elif page == "🧪 Manual Testing":
-    st.markdown("## 🧪 Kitty's Test Lab 🔬✨")
+    st.header("🧪 Manual Prescription Testing 🐱💕")
     
     st.write("Test drug combinations for a patient manually to check for conflicts.")
     
@@ -888,7 +839,7 @@ elif page == "🧪 Manual Testing":
 
 # ============= IMPORT DATA PAGE =============
 elif page == "📁 Import Data":
-    st.markdown("## 📁 Kitty's Data Import Nya~ 🐱📊")
+    st.header("📁 Import Custom Data Nyan~ 📂✨")
     
     st.write("""
     Upload your own CSV files to customize the database. The files should follow the same format as the default files.
@@ -1090,16 +1041,7 @@ drug-condition,Hypertension,Ibuprofen,Moderate,Prefer Paracetamol,May raise BP""
 # Footer
 st.divider()
 st.markdown("""
-    <div style='text-align: center; padding: 2rem; background: linear-gradient(135deg, #FFE5F5, #FFF0F5); border-radius: 20px; border: 3px solid #FFB6C1;'>
-        <img src='https://http.cat/200' width='100' style='border-radius: 15px; margin-bottom: 1rem;'/>
-        <p style='color: #FF1493; font-size: 1.2rem; font-weight: 600; margin: 0;'>
-            🎀 Kitty Drug Checker 🐱
-        </p>
-        <p style='color: #FF69B4; font-size: 0.9rem; margin: 0.5rem 0 0 0;'>
-            Powered by Mesa, Streamlit & Lots of Kawaii Love 💕✨
-        </p>
-        <p style='color: #FFB6C1; font-size: 0.8rem; margin: 0.5rem 0 0 0;'>
-            Made with 💖 by Aneesh | Cat images from http.cat 🐱
-        </p>
+    <div style='text-align: center; color: #666; padding: 1rem;'>
+        <p>Drug Conflict Detection System | Powered by Mesa & Streamlit</p>
     </div>
 """, unsafe_allow_html=True)
