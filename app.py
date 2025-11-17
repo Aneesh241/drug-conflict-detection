@@ -389,7 +389,7 @@ st.markdown("""
 # Bongo Cat Animation
 st.markdown("""
     <div class="bongo-cat">
-        <img src="https://media.tenor.com/lRZ-eMLbGt8AAAAi/bongo-cat-transparent.gif" width="150" alt="Bongo Cat">
+        <img src="https://tenor.com/bRUoc.gif" width="150" alt="Bongo Cat">
     </div>
 """, unsafe_allow_html=True)
 
