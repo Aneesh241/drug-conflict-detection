@@ -389,7 +389,28 @@ st.markdown("""
 
 # Sidebar
 with st.sidebar:
-    st.image("https://i.pinimg.com/originals/61/81/a5/6181a52c74e90273a071eca038e7fa6e.gif", width=100)
+    # Pink Hello Kitty SVG
+    st.markdown("""
+        <div style="text-align: center; padding: 1rem;">
+            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 4C8 2.89543 7.10457 2 6 2C4.89543 2 4 2.89543 4 4C4 5.10457 4.89543 6 6 6C7.10457 6 8 5.10457 8 4Z" fill="#ff69b4"/>
+                <path d="M20 4C20 2.89543 19.1046 2 18 2C16.8954 2 16 2.89543 16 4C16 5.10457 16.8954 6 18 6C19.1046 6 20 5.10457 20 4Z" fill="#ff69b4"/>
+                <path d="M12 22C16.4183 22 20 18.4183 20 14V8C20 7.44772 19.5523 7 19 7H5C4.44772 7 4 7.44772 4 8V14C4 18.4183 7.58172 22 12 22Z" fill="#ff69b4"/>
+                <circle cx="9" cy="12" r="1.5" fill="#1a1a2e"/>
+                <circle cx="15" cy="12" r="1.5" fill="#1a1a2e"/>
+                <path d="M10 15C10 15.5523 10.4477 16 11 16H13C13.5523 16 14 15.5523 14 15" stroke="#1a1a2e" stroke-width="1.5" stroke-linecap="round"/>
+                <ellipse cx="7" cy="13" rx="0.8" ry="1.5" fill="#ffb6c1"/>
+                <ellipse cx="17" cy="13" rx="0.8" ry="1.5" fill="#ffb6c1"/>
+                <circle cx="12" cy="10" r="0.5" fill="#ffb6c1"/>
+                <line x1="9" y1="10.5" x2="6" y2="9.5" stroke="#1a1a2e" stroke-width="0.5"/>
+                <line x1="9" y1="11" x2="6" y2="11" stroke="#1a1a2e" stroke-width="0.5"/>
+                <line x1="9" y1="11.5" x2="6" y2="12.5" stroke="#1a1a2e" stroke-width="0.5"/>
+                <line x1="15" y1="10.5" x2="18" y2="9.5" stroke="#1a1a2e" stroke-width="0.5"/>
+                <line x1="15" y1="11" x2="18" y2="11" stroke="#1a1a2e" stroke-width="0.5"/>
+                <line x1="15" y1="11.5" x2="18" y2="12.5" stroke="#1a1a2e" stroke-width="0.5"/>
+            </svg>
+        </div>
+    """, unsafe_allow_html=True)
     st.title("🐱 Meow Navigation Nyan~")
     
     page = st.radio(
