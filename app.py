@@ -15,42 +15,215 @@ from utils import read_csv_records
 
 # Page configuration
 st.set_page_config(
-    page_title="Drug Conflict Detection System",
-    page_icon="💊",
+    page_title="🎀 Kitty Drug Checker 🐱",
+    page_icon="🐱",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS - Hello Kitty Theme
 st.markdown("""
     <style>
+    /* Import cute fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+    
+    /* Global styling */
+    * {
+        font-family: 'Poppins', sans-serif !important;
+    }
+    
+    /* Background and main colors */
+    .stApp {
+        background: linear-gradient(135deg, #FFE5E5 0%, #FFF0F5 50%, #FFE5F5 100%) !important;
+    }
+    
+    /* Animated floating hearts background */
+    .stApp::before {
+        content: "💕 🎀 🐱 ✨ 💖 🌸 🎀 🐱";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        font-size: 2rem;
+        opacity: 0.1;
+        animation: float 20s infinite;
+        z-index: -1;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    /* Header styling */
     .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
+        font-size: 3rem;
+        font-weight: 700;
+        background: linear-gradient(45deg, #FF69B4, #FFB6C1, #FF1493);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         text-align: center;
         margin-bottom: 2rem;
+        text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.3);
+        animation: bounce 2s infinite;
     }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #FFB6C1 0%, #FFE5E5 100%) !important;
+        border-right: 3px solid #FF69B4;
+    }
+    
+    /* Metric cards */
     .metric-card {
-        background-color: #f0f2f6;
-        padding: 1rem;
-        border-radius: 0.5rem;
+        background: linear-gradient(135deg, #FFE5F5, #FFF0F5);
+        padding: 1.5rem;
+        border-radius: 20px;
         text-align: center;
+        border: 3px solid #FFB6C1;
+        box-shadow: 0 8px 16px rgba(255, 105, 180, 0.2);
+        transition: transform 0.3s ease;
     }
+    
+    .metric-card:hover {
+        transform: scale(1.05) rotate(2deg);
+        box-shadow: 0 12px 24px rgba(255, 105, 180, 0.3);
+    }
+    
+    /* Conflict cards with cat images from http.cat */
     .conflict-major {
-        background-color: #ffebee;
-        padding: 0.5rem;
-        border-left: 4px solid #f44336;
+        background: linear-gradient(135deg, #FFE5E5, #FFD5D5);
+        padding: 1rem;
+        border-left: 6px solid #FF1493;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(255, 20, 147, 0.2);
+        margin: 1rem 0;
     }
+    
     .conflict-moderate {
-        background-color: #fff3e0;
-        padding: 0.5rem;
-        border-left: 4px solid #ff9800;
+        background: linear-gradient(135deg, #FFF5E5, #FFE5D5);
+        padding: 1rem;
+        border-left: 6px solid #FFB6C1;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(255, 182, 193, 0.2);
+        margin: 1rem 0;
     }
+    
     .conflict-minor {
-        background-color: #fff9c4;
+        background: linear-gradient(135deg, #FFFAE5, #FFF5E5);
+        padding: 1rem;
+        border-left: 6px solid #FFD700;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+        margin: 1rem 0;
+    }
+    
+    /* Buttons */
+    .stButton>button {
+        background: linear-gradient(45deg, #FF69B4, #FF1493) !important;
+        color: white !important;
+        border-radius: 25px !important;
+        border: none !important;
+        padding: 0.5rem 2rem !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 12px rgba(255, 105, 180, 0.4) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton>button:hover {
+        transform: scale(1.1) !important;
+        box-shadow: 0 6px 20px rgba(255, 105, 180, 0.6) !important;
+    }
+    
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 1rem;
+        background-color: #FFE5F5;
+        border-radius: 15px;
         padding: 0.5rem;
-        border-left: 4px solid #fbc02d;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background: linear-gradient(135deg, #FFB6C1, #FFE5E5);
+        border-radius: 15px;
+        color: #FF1493;
+        font-weight: 600;
+        border: 2px solid #FF69B4;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #FF69B4, #FF1493) !important;
+        color: white !important;
+    }
+    
+    /* Expanders */
+    .streamlit-expanderHeader {
+        background: linear-gradient(135deg, #FFE5F5, #FFF0F5) !important;
+        border-radius: 15px !important;
+        border: 2px solid #FFB6C1 !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Input fields */
+    .stTextInput>div>div>input, .stSelectbox>div>div>div {
+        border-radius: 15px !important;
+        border: 2px solid #FFB6C1 !important;
+        background-color: #FFF0F5 !important;
+    }
+    
+    /* Dataframe */
+    .dataframe {
+        border-radius: 15px !important;
+        border: 3px solid #FFB6C1 !important;
+    }
+    
+    /* Radio buttons */
+    .stRadio>div {
+        background: linear-gradient(135deg, #FFE5F5, #FFF0F5);
+        padding: 1rem;
+        border-radius: 15px;
+        border: 2px solid #FFB6C1;
+    }
+    
+    /* Multiselect */
+    .stMultiSelect>div>div>div {
+        background-color: #FFF0F5 !important;
+        border-radius: 15px !important;
+        border: 2px solid #FFB6C1 !important;
+    }
+    
+    /* Success/Error/Info boxes */
+    .stSuccess, .stError, .stWarning, .stInfo {
+        border-radius: 15px !important;
+        border-left: 6px solid #FF69B4 !important;
+    }
+    
+    /* Sparkles effect */
+    @keyframes sparkle {
+        0%, 100% { opacity: 0; }
+        50% { opacity: 1; }
+    }
+    
+    .sparkle {
+        animation: sparkle 1.5s infinite;
+    }
+    
+    /* Cat paw prints */
+    .paw-print {
+        font-size: 1.5rem;
+        opacity: 0.3;
+        position: absolute;
+        animation: fadeInOut 3s infinite;
+    }
+    
+    @keyframes fadeInOut {
+        0%, 100% { opacity: 0.1; }
+        50% { opacity: 0.3; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -196,54 +369,106 @@ def get_severity_color(severity):
 
 # Sidebar
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/000000/pill.png", width=80)
-    st.title("🏥 Navigation")
+    # Hello Kitty image
+    st.markdown("""
+        <div style='text-align: center;'>
+            <img src='https://http.cat/200' width='150' style='border-radius: 20px; border: 3px solid #FF69B4;'/>
+            <h2 style='color: #FF1493; margin-top: 1rem;'>🎀 Kitty Menu 🐱</h2>
+        </div>
+    """, unsafe_allow_html=True)
     
     page = st.radio(
-        "Select Page:",
-        ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data"]
+        "🌸 Navigate:",
+        ["🏠 Dashboard", "🐱 Patients", "💊 Prescription Simulator", "⚠️ Conflicts", "🎀 Drug Database", "⚙️ Rules Engine", "🧪 Manual Testing", "📁 Import Data"]
     )
     
     st.divider()
     
     # Quick Actions
-    st.subheader("Quick Actions")
-    if st.button("🔄 Run Simulation", use_container_width=True, type="primary"):
-        with st.spinner("Running simulation..."):
+    st.subheader("✨ Quick Actions ✨")
+    if st.button("🔄 Run Simulation 🎀", use_container_width=True, type="primary"):
+        with st.spinner("🐱 Meow! Running simulation..."):
             run_simulation()
-        st.success("Simulation completed!")
+        st.success("🎉 Simulation completed! Nya~ 🐱")
         st.rerun()
     
     if st.session_state.simulation_run:
-        st.info(f"Last run: {st.session_state.last_run}")
+        st.info(f"🕐 Last run: {st.session_state.last_run}")
+    
+    # Add cute cat facts
+    st.markdown("---")
+    st.markdown("""
+        <div style='background: linear-gradient(135deg, #FFE5F5, #FFF0F5); padding: 1rem; border-radius: 15px; border: 2px solid #FFB6C1;'>
+            <p style='text-align: center; font-size: 0.9rem; color: #FF1493;'>
+                😸 Did you know? Cats spend 70% of their lives sleeping! 💤
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
 
-# Main content area
-st.markdown('<div class="main-header">💊 Drug Conflict Detection System</div>', unsafe_allow_html=True)
+# Main content area with animated header
+st.markdown("""
+    <div class="main-header">
+        🎀 Kitty Drug Checker 🐱✨
+        <div style='font-size: 1rem; color: #FF69B4; font-weight: normal; margin-top: 0.5rem;'>
+            Making healthcare kawaii, one prescription at a time! 💕
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
 # ============= DASHBOARD PAGE =============
-if page == "Dashboard":
-    st.header("📊 Dashboard Overview")
+if page == "🏠 Dashboard":
+    st.markdown("## 📊 Dashboard Nya~verview 🐱")
     
     # Load basic data
     patients_data, drugs_data, rules_data = load_data()
     
-    # Top metrics
+    # Top metrics with cat images
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("Total Patients", len(patients_data))
+        st.markdown(f"""
+            <div class="metric-card">
+                <img src='https://http.cat/100' width='60' style='border-radius: 10px;'/>
+                <h3 style='color: #FF1493; margin: 0.5rem 0;'>{len(patients_data)}</h3>
+                <p style='color: #FF69B4; font-weight: 600;'>Total Patients 🐱</p>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        st.metric("Available Drugs", len(drugs_data))
+        st.markdown(f"""
+            <div class="metric-card">
+                <img src='https://http.cat/201' width='60' style='border-radius: 10px;'/>
+                <h3 style='color: #FF1493; margin: 0.5rem 0;'>{len(drugs_data)}</h3>
+                <p style='color: #FF69B4; font-weight: 600;'>Available Drugs 💊</p>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        st.metric("Active Rules", len(rules_data))
+        st.markdown(f"""
+            <div class="metric-card">
+                <img src='https://http.cat/202' width='60' style='border-radius: 10px;'/>
+                <h3 style='color: #FF1493; margin: 0.5rem 0;'>{len(rules_data)}</h3>
+                <p style='color: #FF69B4; font-weight: 600;'>Active Rules ⚙️</p>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col4:
         if st.session_state.simulation_run:
-            st.metric("Conflicts Detected", len(st.session_state.conflicts_df))
+            st.markdown(f"""
+                <div class="metric-card">
+                    <img src='https://http.cat/203' width='60' style='border-radius: 10px;'/>
+                    <h3 style='color: #FF1493; margin: 0.5rem 0;'>{len(st.session_state.conflicts_df)}</h3>
+                    <p style='color: #FF69B4; font-weight: 600;'>Conflicts Detected ⚠️</p>
+                </div>
+            """, unsafe_allow_html=True)
         else:
-            st.metric("Conflicts Detected", "Run simulation")
+            st.markdown("""
+                <div class="metric-card">
+                    <img src='https://http.cat/404' width='60' style='border-radius: 10px;'/>
+                    <h3 style='color: #FF1493; margin: 0.5rem 0;'>?</h3>
+                    <p style='color: #FF69B4; font-weight: 600;'>Run simulation 🔄</p>
+                </div>
+            """, unsafe_allow_html=True)
     
     st.divider()
     
@@ -310,8 +535,8 @@ if page == "Dashboard":
         st.info("👆 Click 'Run Simulation' in the sidebar to see results")
 
 # ============= PATIENTS PAGE =============
-elif page == "Patients":
-    st.header("👥 Patient Management")
+elif page == "🐱 Patients":
+    st.markdown("## 🐱 Meow-nagement (Patient Profiles) 💕")
     
     patients_data, _, _ = load_data()
     
@@ -380,8 +605,8 @@ elif page == "Patients":
                         st.markdown(f"- 💊 {drug}")
 
 # ============= PRESCRIPTION SIMULATOR PAGE =============
-elif page == "Prescription Simulator":
-    st.header("💉 Prescription Simulation")
+elif page == "💊 Prescription Simulator":
+    st.markdown("## 💊 Kitty's Prescription Lab 🧪✨")
     
     if not st.session_state.simulation_run:
         st.warning("No simulation has been run yet. Click 'Run Simulation' in the sidebar.")
@@ -425,8 +650,8 @@ elif page == "Prescription Simulator":
                             st.success("✅ Safe")
 
 # ============= CONFLICTS PAGE =============
-elif page == "Conflicts":
-    st.header("⚠️ Conflict Detection Results")
+elif page == "⚠️ Conflicts":
+    st.markdown("## ⚠️ Conflict Meow-nitoring 🐱💔")
     
     if not st.session_state.simulation_run:
         st.warning("No simulation has been run yet. Click 'Run Simulation' in the sidebar.")
@@ -510,8 +735,8 @@ elif page == "Conflicts":
             )
 
 # ============= DRUG DATABASE PAGE =============
-elif page == "Drug Database":
-    st.header("💊 Drug Database")
+elif page == "🎀 Drug Database":
+    st.markdown("## 🎀 Kitty's Medicine Cabinet 💊✨")
     
     _, drugs_data, _ = load_data()
     
@@ -547,8 +772,8 @@ elif page == "Drug Database":
             st.markdown(f"- {cond}: {count} drug(s)")
 
 # ============= RULES ENGINE PAGE =============
-elif page == "Rules Engine":
-    st.header("⚙️ Conflict Detection Rules")
+elif page == "⚙️ Rules Engine":
+    st.markdown("## ⚙️ Kitty's Rule Book 📖🐱")
     
     _, _, rules_data = load_data()
     
@@ -592,8 +817,8 @@ elif page == "Rules Engine":
             st.plotly_chart(fig, use_container_width=True)
 
 # ============= MANUAL TESTING PAGE =============
-elif page == "Manual Testing":
-    st.header("🧪 Manual Prescription Testing")
+elif page == "🧪 Manual Testing":
+    st.markdown("## 🧪 Kitty's Test Lab 🔬✨")
     
     st.write("Test drug combinations for a patient manually to check for conflicts.")
     
@@ -662,8 +887,8 @@ elif page == "Manual Testing":
                     st.success("✅ No conflicts detected! This prescription is safe.")
 
 # ============= IMPORT DATA PAGE =============
-elif page == "Import Data":
-    st.header("📁 Import Custom Data")
+elif page == "📁 Import Data":
+    st.markdown("## 📁 Kitty's Data Import Nya~ 🐱📊")
     
     st.write("""
     Upload your own CSV files to customize the database. The files should follow the same format as the default files.
@@ -865,7 +1090,16 @@ drug-condition,Hypertension,Ibuprofen,Moderate,Prefer Paracetamol,May raise BP""
 # Footer
 st.divider()
 st.markdown("""
-    <div style='text-align: center; color: #666; padding: 1rem;'>
-        <p>Drug Conflict Detection System | Powered by Mesa & Streamlit</p>
+    <div style='text-align: center; padding: 2rem; background: linear-gradient(135deg, #FFE5F5, #FFF0F5); border-radius: 20px; border: 3px solid #FFB6C1;'>
+        <img src='https://http.cat/200' width='100' style='border-radius: 15px; margin-bottom: 1rem;'/>
+        <p style='color: #FF1493; font-size: 1.2rem; font-weight: 600; margin: 0;'>
+            🎀 Kitty Drug Checker 🐱
+        </p>
+        <p style='color: #FF69B4; font-size: 0.9rem; margin: 0.5rem 0 0 0;'>
+            Powered by Mesa, Streamlit & Lots of Kawaii Love 💕✨
+        </p>
+        <p style='color: #FFB6C1; font-size: 0.8rem; margin: 0.5rem 0 0 0;'>
+            Made with 💖 by Aneesh | Cat images from http.cat 🐱
+        </p>
     </div>
 """, unsafe_allow_html=True)
