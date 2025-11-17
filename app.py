@@ -105,8 +105,8 @@ st.markdown("""
     
     /* Buttons with kawaii style */
     .stButton > button {
-        background: linear-gradient(45deg, #ff69b4, #ffb6c1);
-        color: white;
+        background: linear-gradient(45deg, #ff1493, #ff69b4) !important;
+        color: #ffffff !important;
         border-radius: 20px;
         border: none;
         padding: 0.5rem 2rem;
@@ -118,6 +118,7 @@ st.markdown("""
     
     .stButton > button:hover {
         transform: scale(1.05);
+        background: linear-gradient(45deg, #ff69b4, #ff1493) !important;
         box-shadow: 0 6px 20px rgba(255, 105, 180, 0.6);
         animation: bounce 0.5s ease;
     }
@@ -556,7 +557,7 @@ elif page == "👥 Patients":
                         st.markdown(f"- 💊 {drug}")
 
 # ============= PRESCRIPTION SIMULATOR PAGE =============
-elif page == "Prescription Simulator":
+elif page == "💉 Prescription Simulator":
     st.header("� Prescription Simulation")
     
     if not st.session_state.simulation_run:
