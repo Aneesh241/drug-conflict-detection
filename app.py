@@ -139,20 +139,24 @@ st.markdown("""
     
     /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
-        background-color: #2d2d44;
+        background-color: #1a1a2e;
         border-radius: 15px;
         padding: 0.5rem;
     }
     
     .stTabs [data-baseweb="tab"] {
-        color: #ffb6c1;
+        color: #ffb6c1 !important;
+        background-color: #2d2d44;
         border-radius: 10px;
         font-family: 'Comic Sans MS', cursive;
+        padding: 0.5rem 1rem;
+        margin: 0.2rem;
     }
     
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(45deg, #ff69b4, #ffb6c1);
-        color: white !important;
+        background: linear-gradient(45deg, #c71585, #ff1493) !important;
+        color: #ffffff !important;
+        font-weight: bold;
     }
     
     /* Dataframe styling */
@@ -558,7 +562,7 @@ elif page == "👥 Patients":
 
 # ============= PRESCRIPTION SIMULATOR PAGE =============
 elif page == "💉 Prescription Simulator":
-    st.header("� Prescription Simulation")
+    st.header("💉 Prescription Simulation")
     
     if not st.session_state.simulation_run:
         st.warning("No simulation has been run yet. Click 'Run Simulation' in the sidebar.")
