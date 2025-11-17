@@ -1,0 +1,16 @@
+id,name,conditions,allergies
+1,John Doe,Hypertension;Diabetes,Penicillin
+2,Jane Smith,Infection,None
+3,Bob Lee,Hypertension,None
+4,Sarah Johnson,Hypertension;High Cholesterol,Sulfa
+5,Michael Brown,Diabetes;Heart Failure,None
+6,Emily Davis,Depression;Anxiety,None
+7,Robert Wilson,Asthma;Allergies,Aspirin
+8,Lisa Anderson,Arthritis;Hypertension,None
+9,David Martinez,GERD;Diabetes,None
+10,Jennifer Taylor,Anticoagulation;Pain,Penicillin;Ibuprofen
+11,James Thomas,Heart Failure;Hypertension,None
+12,Mary Garcia,Hypothyroidism;Depression,None
+13,Christopher Lee,Infection;Diabetes,Penicillin
+14,Patricia White,Neuropathy;Anxiety,None
+15,Daniel Harris,Inflammation;Asthma,Aspirin

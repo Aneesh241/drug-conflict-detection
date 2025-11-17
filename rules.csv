@@ -1,0 +1,38 @@
+type,item_a,item_b,severity,recommendation,notes
+drug-drug,Aspirin,Warfarin,Major,Avoid combination; consider DOAC or monitor INR closely,Bleeding risk increases
+drug-drug,Ibuprofen,Warfarin,Major,Avoid NSAIDs; prefer Paracetamol with caution,Bleeding risk increases
+drug-drug,Naproxen,Warfarin,Major,Avoid NSAIDs; prefer Paracetamol,Bleeding risk increases
+drug-drug,Aspirin,Clopidogrel,Major,Monitor for bleeding; avoid long-term combination,Increased bleeding risk
+drug-drug,Warfarin,Rivaroxaban,Major,Never combine anticoagulants,Severe bleeding risk
+drug-condition,Hypertension,Ibuprofen,Moderate,Prefer Paracetamol; avoid NSAIDs if uncontrolled BP,May raise blood pressure
+drug-condition,Hypertension,Naproxen,Moderate,Prefer Paracetamol; avoid NSAIDs,May raise blood pressure
+drug-condition,PenicillinAllergy,Penicillin,Major,Use non-penicillin antibiotic such as Azithromycin,Anaphylaxis risk
+drug-condition,PenicillinAllergy,Amoxicillin,Major,Use non-penicillin antibiotic such as Azithromycin,Cross-reactivity with penicillin
+drug-condition,AspirinAllergy,Aspirin,Major,Use Paracetamol or other non-NSAID analgesic,Anaphylaxis or severe reaction risk
+drug-condition,IbuprofenAllergy,Ibuprofen,Major,Use Paracetamol instead,Allergic reaction risk
+drug-drug,Metformin,ContrastDye,Moderate,Withhold Metformin around contrast; monitor renal function,Lactic acidosis risk
+drug-drug,Warfarin,Simvastatin,Moderate,Monitor INR closely; may need dose adjustment,Increased anticoagulation effect
+drug-drug,Warfarin,Atorvastatin,Moderate,Monitor INR closely,Increased anticoagulation effect
+drug-drug,Digoxin,Furosemide,Moderate,Monitor potassium levels; supplement if needed,Hypokalemia increases digoxin toxicity
+drug-drug,Lisinopril,Hydrochlorothiazide,Minor,Monitor blood pressure and electrolytes,Generally safe combination
+drug-drug,Metformin,Furosemide,Moderate,Monitor renal function and blood glucose,Risk of lactic acidosis
+drug-drug,Fluoxetine,Alprazolam,Moderate,Monitor for excessive sedation,Increased benzodiazepine effect
+drug-drug,Sertraline,Lorazepam,Moderate,Monitor for excessive sedation,Increased benzodiazepine effect
+drug-drug,Omeprazole,Clopidogrel,Moderate,Consider alternative PPI like Pantoprazole,Reduced antiplatelet effect
+drug-drug,Azithromycin,Warfarin,Moderate,Monitor INR closely,Increased anticoagulation
+drug-drug,Ciprofloxacin,Warfarin,Moderate,Monitor INR closely,Increased anticoagulation
+drug-condition,Asthma,Atenolol,Moderate,Prefer cardioselective beta blockers or alternative,May trigger bronchospasm
+drug-condition,Heart Failure,Ibuprofen,Moderate,Avoid NSAIDs; use Paracetamol,May worsen heart failure
+drug-condition,Heart Failure,Naproxen,Moderate,Avoid NSAIDs; use Paracetamol,May worsen heart failure
+drug-condition,Diabetes,Prednisone,Moderate,Monitor blood glucose closely; may need insulin adjustment,Hyperglycemia risk
+drug-condition,Hypertension,Prednisone,Moderate,Monitor blood pressure,May increase blood pressure
+drug-drug,Warfarin,Aspirin,Major,Avoid unless absolutely necessary; monitor INR,Severe bleeding risk
+drug-drug,Methotrexate,Ibuprofen,Major,Avoid NSAIDs; use Paracetamol,Increased methotrexate toxicity
+drug-drug,Methotrexate,Naproxen,Major,Avoid NSAIDs,Increased methotrexate toxicity
+drug-drug,Levothyroxine,Omeprazole,Moderate,Separate administration by 4 hours,Reduced thyroid hormone absorption
+drug-drug,Gabapentin,Alprazolam,Moderate,Monitor for excessive sedation,Increased CNS depression
+drug-drug,Diphenhydramine,Alprazolam,Moderate,Avoid combination if possible,Excessive sedation risk
+drug-drug,Diphenhydramine,Lorazepam,Moderate,Avoid combination if possible,Excessive sedation risk
+drug-condition,Anxiety,Diphenhydramine,Minor,May increase anxiety in some patients,Paradoxical effect possible
+drug-condition,GERD,Aspirin,Moderate,Use enteric-coated or avoid; prefer Paracetamol,May worsen GERD symptoms
+drug-condition,GERD,Ibuprofen,Moderate,Avoid NSAIDs; use Paracetamol with PPI,May worsen GERD symptoms
