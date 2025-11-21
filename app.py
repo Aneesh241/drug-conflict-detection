@@ -11,7 +11,7 @@ import json
 
 from model import HealthcareModel
 from agents import PatientAgent
-from utils import read_csv_records
+from utils import load_patients, load_drugs, load_rules, build_rules_kb, get_conflicts_cached
 
 # Page configuration
 st.set_page_config(
@@ -70,6 +70,8 @@ if 'custom_drugs' not in st.session_state:
     st.session_state.custom_drugs = None
 if 'custom_rules' not in st.session_state:
     st.session_state.custom_rules = None
+if 'cached_kb' not in st.session_state:
+    st.session_state.cached_kb = None
 
 # Helper functions
 def load_data():
@@ -82,24 +84,24 @@ def load_data():
         if st.session_state.custom_patients is not None:
             patients = st.session_state.custom_patients
         else:
-            patients = read_csv_records(base_dir / "patients.csv")
+            patients = load_patients(base_dir / "patients.csv")
         
         if st.session_state.custom_drugs is not None:
             drugs = st.session_state.custom_drugs
         else:
-            drugs = read_csv_records(base_dir / "drugs.csv")
+            drugs = load_drugs(base_dir / "drugs.csv")
         
         if st.session_state.custom_rules is not None:
             rules = st.session_state.custom_rules
         else:
-            rules = read_csv_records(base_dir / "rules.csv")
+            rules = load_rules(base_dir / "rules.csv")
         
         return patients, drugs, rules
     else:
         base_dir = Path(__file__).parent
-        patients = read_csv_records(base_dir / "patients.csv")
-        drugs = read_csv_records(base_dir / "drugs.csv")
-        rules = read_csv_records(base_dir / "rules.csv")
+        patients = load_patients(base_dir / "patients.csv")
+        drugs = load_drugs(base_dir / "drugs.csv")
+        rules = load_rules(base_dir / "rules.csv")
         return patients, drugs, rules
 
 def save_uploaded_file(uploaded_file, file_type):
@@ -625,21 +627,48 @@ elif page == "Manual Testing":
         
         drug_names = sorted([drug['drug'] for drug in drugs_data])
         selected_drugs = st.multiselect("Select Drugs:", drug_names, key="manual_drugs", 
-                                       help="Conflicts are checked automatically as you select drugs")
+                                       help="Conflicts are checked automatically as you select drugs",
+                                       max_selections=15)
+        
+        if len(selected_drugs) > 10:
+            st.info("💡 Large prescriptions may take a moment to analyze. Results are cached for better performance.")
     
     st.divider()
     
-    # Real-time conflict checking
+    # Real-time conflict checking with caching
     if selected_drugs:
-        # Create temporary model and test
-        base_dir = Path(__file__).parent
-        model = HealthcareModel(data_dir=base_dir)
-        
-        conflicts = model.rule_engine.check_conflicts(
-            prescription=selected_drugs,
-            conditions=selected_conditions,
-            allergies=selected_allergies if selected_allergies != ["None"] else []
-        )
+        with st.spinner("🔍 Analyzing prescription..." if len(selected_drugs) > 5 else None):
+            # Build KB once and cache it
+            if st.session_state.cached_kb is None:
+                base_dir = Path(__file__).parent
+                rules = load_rules(base_dir / "rules.csv")
+                st.session_state.cached_kb = build_rules_kb(rules)
+            
+            # Use optimized cached conflict detection
+            from utils import make_condition_tokens
+            conditions_tokens = make_condition_tokens(
+                selected_conditions,
+                selected_allergies if selected_allergies != ["None"] else []
+            )
+            
+            conflicts_list = get_conflicts_cached(
+                selected_drugs,
+                conditions_tokens,
+                st.session_state.cached_kb
+            )
+            
+            # Convert Conflict objects to dicts for display
+            conflicts = [
+                {
+                    'type': c.rtype,
+                    'item_a': c.item_a,
+                    'item_b': c.item_b,
+                    'severity': c.severity,
+                    'recommendation': c.recommendation,
+                    'score': c.score
+                }
+                for c in conflicts_list
+            ]
         
         # Display real-time results
         st.subheader("🔍 Real-Time Conflict Analysis")
