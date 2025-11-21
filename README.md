@@ -148,7 +148,7 @@ Simple priority queue over candidate pairs (no state exploration). Upgraded to t
 
 ### Running Tests
 ```powershell
-# All tests (14 tests)
+# All tests (17 tests)
 pytest tests/ -v
 
 # Specific test files
@@ -156,6 +156,7 @@ pytest tests/test_bfs_search.py -v           # BFS algorithm tests (7)
 pytest tests/test_conflict_detection.py -v   # Integration tests (2)
 pytest tests/test_doctor_prescribe.py -v     # Doctor agent tests (2)
 pytest tests/test_data_models.py -v          # Data validation tests (3)
+pytest tests/test_memoization.py -v          # Cache layer tests (3)
 ```
 
 ### Test Coverage
@@ -163,10 +164,10 @@ pytest tests/test_data_models.py -v          # Data validation tests (3)
 - ✅ **Conflict Detection**: Multi-drug prescriptions, severity sorting
 - ✅ **Data Validation**: Pydantic models, semicolon parsing, ID coercion
 - ✅ **Doctor Logic**: Risk-aware prescribing, allergy checking, replacements
+- ✅ **Memoization Layer**: Cache hits/misses, KB invalidation
 
 ### Adding Tests
 Place new tests in `tests/` directory. Use fixtures from `conftest.py` for model setup.
-
 ## 14. Medical Disclaimer
 This repository is for **educational and prototyping purposes only**. It does **not** provide medical advice and must **not** be used for real clinical decision making. Always consult qualified healthcare professionals.
 
