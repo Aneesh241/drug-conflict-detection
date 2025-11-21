@@ -3,6 +3,8 @@ drug-drug,Aspirin,Warfarin,Major,Avoid combination; consider DOAC or monitor INR
 drug-drug,Ibuprofen,Warfarin,Major,Avoid NSAIDs; prefer Paracetamol with caution,Bleeding risk increases
 drug-drug,Naproxen,Warfarin,Major,Avoid NSAIDs; prefer Paracetamol,Bleeding risk increases
 drug-drug,Aspirin,Clopidogrel,Major,Monitor for bleeding; avoid long-term combination,Increased bleeding risk
+drug-drug,Ibuprofen,Clopidogrel,Moderate,Avoid NSAIDs with antiplatelet; prefer Paracetamol,Increased bleeding risk
+drug-drug,Naproxen,Clopidogrel,Moderate,Avoid NSAIDs with antiplatelet; prefer Paracetamol,Increased bleeding risk
 drug-drug,Warfarin,Rivaroxaban,Major,Never combine anticoagulants,Severe bleeding risk
 drug-condition,Hypertension,Ibuprofen,Moderate,Prefer Paracetamol; avoid NSAIDs if uncontrolled BP,May raise blood pressure
 drug-condition,Hypertension,Naproxen,Moderate,Prefer Paracetamol; avoid NSAIDs,May raise blood pressure

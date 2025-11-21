@@ -8,7 +8,7 @@ from mesa import Model
 from mesa.time import BaseScheduler
 
 from agents import PatientAgent, DoctorAgent, PharmacistAgent, RuleEngineAgent
-from utils import read_csv_records, logger, conflicts_to_frame
+from utils import load_patients, load_drugs, load_rules, logger, conflicts_to_frame
 
 
 class HealthcareModel(Model):
@@ -16,9 +16,9 @@ class HealthcareModel(Model):
         super().__init__()
         self.data_dir = Path(data_dir)
         # Load data
-        self.patients_rows = read_csv_records(self.data_dir / "patients.csv")
-        self.drugs_rows = read_csv_records(self.data_dir / "drugs.csv")
-        self.rules_rows = read_csv_records(self.data_dir / "rules.csv")
+        self.patients_rows = load_patients(self.data_dir / "patients.csv")
+        self.drugs_rows = load_drugs(self.data_dir / "drugs.csv")
+        self.rules_rows = load_rules(self.data_dir / "rules.csv")
 
         # Scheduler (not heavily used in this simple orchestrated loop)
         self.schedule = BaseScheduler(self)

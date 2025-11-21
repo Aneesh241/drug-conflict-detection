@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 from mesa import Agent
 
-from utils import bfs_conflicts, build_rules_kb, make_condition_tokens, read_csv_records, logger
+from utils import bfs_conflicts, build_rules_kb, make_condition_tokens, severity_to_score, logger
 
 
 class PatientAgent(Agent):
@@ -27,23 +27,72 @@ class DoctorAgent(Agent):
         self.drugs_catalog = drugs_catalog
 
     def prescribe(self, patient: PatientAgent) -> List[str]:
-        """
-        Naive rule-based prescriber:
-        - For each patient condition, pick the first matching drug in catalog.
-        - Always add an analgesic (Ibuprofen) to expose potential conflicts in the demo.
-        """
         chosen: List[str] = []
+        condition_tokens = make_condition_tokens(patient.conditions, patient.allergies)
+
+        def predicted_risk(drug: str, current_rx: List[str]) -> int:
+            risk = 0
+            dl = drug.lower()
+            kb = self.model.rule_engine.kb
+            for existing in current_rx:
+                a, b = sorted([existing.lower(), dl])
+                key = ("drug-drug", a, b)
+                rule = kb.get(key)
+                if rule:
+                    risk += severity_to_score(rule.severity)
+            for ct in condition_tokens:
+                key = ("drug-condition", ct.lower(), dl)
+                rule = kb.get(key)
+                if rule:
+                    risk += severity_to_score(rule.severity)
+            return risk
+
+        # Choose one drug per condition minimizing predicted risk
         for cond in patient.conditions:
-            for row in self.drugs_catalog:
-                if str(row.get("condition", "")).strip().lower() == str(cond).strip().lower():
-                    drug = str(row.get("drug", "")).strip()
-                    if drug and drug not in chosen:
-                        chosen.append(drug)
-                        break
-        # Deliberately add a painkiller to demonstrate conflicts (e.g., with Hypertension)
-        if "Ibuprofen" not in chosen:
-            chosen.append("Ibuprofen")
-        logger.info(f"Doctor prescribed for {patient.name}: {chosen}")
+            candidates = [r for r in self.drugs_catalog if str(r.get("condition", "")).strip().lower() == str(cond).strip().lower()]
+            scored: List[Tuple[int, str, Dict[str, Any]]] = []
+            for row in candidates:
+                drug = str(row.get("drug", "")).strip()
+                if not drug or drug in chosen:
+                    continue
+                risk = predicted_risk(drug, chosen)
+                scored.append((risk, drug, row))
+            if not scored:
+                continue
+            scored.sort(key=lambda t: (t[0], t[1].lower()))
+            best_risk, best_drug, best_row = scored[0]
+            # Consider replacements if risk is high (>=3 i.e. at least one Major)
+            replacements = best_row.get("replacements", []) or []
+            if best_risk >= 3 and replacements:
+                rep_scored: List[Tuple[int, str]] = []
+                for rep in replacements:
+                    rep_name = str(rep).strip()
+                    if not rep_name or rep_name in chosen:
+                        continue
+                    rep_risk = predicted_risk(rep_name, chosen)
+                    rep_scored.append((rep_risk, rep_name))
+                if rep_scored:
+                    rep_scored.sort(key=lambda t: (t[0], t[1].lower()))
+                    if rep_scored[0][0] < best_risk:
+                        best_drug = rep_scored[0][1]
+                        best_risk = rep_scored[0][0]
+            chosen.append(best_drug)
+
+        # Add analgesic only if patient has Pain and none chosen yet
+        if any(c.strip().lower() == "pain" for c in patient.conditions):
+            analgesics = ["Paracetamol", "Ibuprofen", "Naproxen", "Aspirin"]
+            if not any(d in chosen for d in analgesics):
+                a_scored: List[Tuple[int, str]] = []
+                for a in analgesics:
+                    # Skip if patient is allergic (check both raw name and allergy token forms)
+                    if a in patient.allergies or f"{a}Allergy" in condition_tokens:
+                        continue
+                    a_scored.append((predicted_risk(a, chosen), a))
+                if a_scored:
+                    a_scored.sort(key=lambda t: (t[0], t[1].lower()))
+                    chosen.append(a_scored[0][1])
+
+        logger.info(f"Doctor prescribed for {patient.name} (risk-aware): {chosen}")
         return chosen
 
     def step(self):

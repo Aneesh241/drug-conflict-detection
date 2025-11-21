@@ -4,9 +4,11 @@ import heapq
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple, Any
+from typing import Dict, Iterable, List, Tuple, Any, Set
+from functools import lru_cache
 
 import pandas as pd
+from data_models import PatientModel, DrugModel, RuleModel, validate_rows
 
 # -----------------
 # Logging utilities
@@ -28,20 +30,33 @@ logger = get_logger()
 # Data utilities
 # -----------------
 
-def read_csv_records(path: Path | str) -> List[dict]:
-    path = Path(path)
-    df = pd.read_csv(path)
-    # Normalize string list fields with ';' separator into Python lists where appropriate
-    records: List[dict] = []
-    for row in df.to_dict(orient="records"):
-        rec = {}
-        for k, v in row.items():
-            if isinstance(v, str) and ";" in v:
-                rec[k] = [x.strip() for x in v.split(";") if x and x.strip().lower() != "none"]
-            else:
-                rec[k] = v
-        records.append(rec)
-    return records
+def _read_raw(path: Path | str) -> List[dict]:
+    df = pd.read_csv(Path(path))
+    return df.to_dict(orient="records")
+
+def load_patients(path: Path | str) -> List[dict]:
+    raw = _read_raw(path)
+    validated, errors = validate_rows(raw, PatientModel)
+    if errors:
+        for idx, err in errors:
+            logger.warning(f"Patient row {idx} failed validation: {err}")
+    return [m.model_dump() for m in validated]
+
+def load_drugs(path: Path | str) -> List[dict]:
+    raw = _read_raw(path)
+    validated, errors = validate_rows(raw, DrugModel)
+    if errors:
+        for idx, err in errors:
+            logger.warning(f"Drug row {idx} failed validation: {err}")
+    return [m.model_dump() for m in validated]
+
+def load_rules(path: Path | str) -> List[dict]:
+    raw = _read_raw(path)
+    validated, errors = validate_rows(raw, RuleModel)
+    if errors:
+        for idx, err in errors:
+            logger.warning(f"Rule row {idx} failed validation: {err}")
+    return [m.model_dump() for m in validated]
 
 # -----------------
 # Severity utilities
@@ -97,7 +112,7 @@ def build_rules_kb(rules_rows: Iterable[dict]) -> Dict[Tuple[str, str, str], Rul
     return kb
 
 # -----------------
-# Best-First Search (BFS)
+# Best-First Search (BFS) / A* Conflict Detection (optimized)
 # -----------------
 
 @dataclass
@@ -108,6 +123,21 @@ class Conflict:
     severity: str
     recommendation: str
     score: int
+
+
+@dataclass(frozen=True)
+class SearchState:
+    """Represents a state in the conflict search space.
+    
+    State = set of active conflicts detected so far in the prescription.
+    """
+    prescription: frozenset[str]  # drugs in prescription
+    conditions: frozenset[str]    # patient conditions/allergies
+    detected_conflicts: frozenset[Tuple[str, str, str]]  # rule keys already found
+    
+    def __lt__(self, other):
+        # Tie-breaking for heapq (not priority, just stable ordering)
+        return len(self.detected_conflicts) < len(other.detected_conflicts)
 
 
 def make_condition_tokens(conditions: Iterable[str], allergies: Iterable[str] | None = None) -> List[str]:
@@ -123,55 +153,141 @@ def make_condition_tokens(conditions: Iterable[str], allergies: Iterable[str] | 
     return tokens
 
 
-def bfs_conflicts(prescription: List[str], conditions: List[str], kb: Dict[Tuple[str, str, str], Rule]) -> List[Conflict]:
+def _compute_heuristic(state: SearchState, kb: Dict[Tuple[str, str, str], Rule]) -> int:
+    """Heuristic: sum of severity scores of detected conflicts (higher = worse state)."""
+    total = 0
+    for key in state.detected_conflicts:
+        rule = kb.get(key)
+        if rule:
+            total += severity_to_score(rule.severity)
+    return total
+
+
+def _precompute_candidate_keys(drugs_set: frozenset[str], cond_set: frozenset[str], kb: Dict[Tuple[str, str, str], Rule]) -> List[Tuple[str, str, str]]:
+    """Precompute all possible conflict keys for this prescription/condition set once.
+
+    This replaces repeated nested pair generation inside each expansion step.
     """
-    Best-First Search over potential conflict nodes prioritized by severity.
-
-    - Nodes: concrete (rtype, item_a, item_b) that exist in KB given current prescription and conditions.
-    - Priority: severity score (Major > Moderate > Minor).
-    - Expansion: trivial (no deeper graph), processed in priority order to mimic best-first evaluation.
-    """
-    # Generate candidate nodes from current state
-    drugs = [d.strip() for d in prescription if d and str(d).strip()]
-    conditions = [c.strip() for c in conditions if c and str(c).strip()]
-
-    # Build candidate keys
-    candidate_keys: List[Tuple[str, str, str]] = []
-
-    # drug-drug pairs
+    drugs = list(drugs_set)
+    conditions = list(cond_set)
+    candidate: List[Tuple[str, str, str]] = []
+    # drug-drug
     for i in range(len(drugs)):
+        di = drugs[i]
         for j in range(i + 1, len(drugs)):
-            a, b = sorted([drugs[i], drugs[j]], key=lambda s: s.lower())
-            k = ("drug-drug", a.lower(), b.lower())
-            if k in kb:
-                candidate_keys.append(k)
-
-    # drug-condition pairs
+            dj = drugs[j]
+            a, b = sorted([di, dj], key=lambda s: s.lower())
+            key = ("drug-drug", a.lower(), b.lower())
+            if key in kb:
+                candidate.append(key)
+    # drug-condition
     for c in conditions:
         for d in drugs:
-            k = ("drug-condition", c.lower(), d.lower())
-            if k in kb:
-                candidate_keys.append(k)
+            key = ("drug-condition", c.lower(), d.lower())
+            if key in kb:
+                candidate.append(key)
+    return candidate
 
-    # Priority queue
-    heap: List[Tuple[int, int, Tuple[str, str, str]]] = []
-    visited: set[Tuple[str, str, str]] = set()
-    counter = 0
 
-    for k in candidate_keys:
-        rule = kb[k]
-        score = severity_to_score(rule.severity)
-        heapq.heappush(heap, (-score, counter, k))  # negative for max-heap behavior
-        counter += 1
-
-    results: List[Conflict] = []
-
-    while heap:
-        neg_score, _, key = heapq.heappop(heap)
-        if key in visited:
-            continue
-        visited.add(key)
+def _expand_neighbors(state: SearchState, all_candidate_keys: List[Tuple[str, str, str]], kb: Dict[Tuple[str, str, str], Rule]) -> List[Tuple[SearchState, Tuple[str, str, str], int]]:
+    """Generate neighbor states by adding one yet-undiscovered conflict from precomputed candidates."""
+    neighbors: List[Tuple[SearchState, Tuple[str, str, str], int]] = []
+    remaining = [k for k in all_candidate_keys if k not in state.detected_conflicts]
+    for key in remaining:
         rule = kb[key]
+        score = severity_to_score(rule.severity)
+        new_state = SearchState(
+            prescription=state.prescription,
+            conditions=state.conditions,
+            detected_conflicts=state.detected_conflicts | {key}
+        )
+        neighbors.append((new_state, key, score))
+    return neighbors
+
+
+_MEMO_CACHE: Dict[Tuple[frozenset[str], frozenset[str], int], List[Conflict]] = {}
+_MEMO_STATS = {"hits": 0, "misses": 0}
+
+
+def get_conflicts_cached(prescription: List[str], conditions: List[str], kb: Dict[Tuple[str, str, str], Rule]) -> List[Conflict]:
+    """Public wrapper providing memoized conflict detection.
+
+    Cache key includes id(kb) so rebuilding the knowledge base invalidates entries.
+    Returns a copy of cached list to avoid accidental mutation.
+    """
+    drugs_set = frozenset(d.strip() for d in prescription if d and str(d).strip())
+    cond_set = frozenset(c.strip() for c in conditions if c and str(c).strip())
+    key = (drugs_set, cond_set, id(kb))
+    cached = _MEMO_CACHE.get(key)
+    if cached is not None:
+        _MEMO_STATS["hits"] += 1
+        return [Conflict(**c.__dict__) for c in cached]
+    _MEMO_STATS["misses"] += 1
+    result = bfs_conflicts(prescription, conditions, kb)
+    _MEMO_CACHE[key] = [Conflict(**c.__dict__) for c in result]
+    return result
+
+
+def bfs_conflicts(prescription: List[str], conditions: List[str], kb: Dict[Tuple[str, str, str], Rule]) -> List[Conflict]:
+    """
+    True Best-First Search (A*-style) over conflict discovery space.
+    
+    Goal: explore the prescription systematically, prioritizing discovery of high-severity conflicts first.
+    State: set of conflicts detected so far
+    Heuristic: cumulative severity score (higher = more critical state to explore)
+    Neighbors: adding one more detectable conflict to current state
+    
+    This ensures Major conflicts are surfaced and reported before Minor ones.
+    """
+    drugs_set = frozenset(d.strip() for d in prescription if d and str(d).strip())
+    cond_set = frozenset(c.strip() for c in conditions if c and str(c).strip())
+    
+    if not drugs_set:
+        return []
+    
+    # Precompute candidate keys for optimization
+    candidate_keys = _precompute_candidate_keys(drugs_set, cond_set, kb)
+
+    # Initial state: no conflicts detected yet
+    initial = SearchState(prescription=drugs_set, conditions=cond_set, detected_conflicts=frozenset())
+    
+    # Priority queue: (priority, counter, state, path_score)
+    # Priority = -(heuristic + path_cost) for max-heap behavior (explore worst states first)
+    heap: List[Tuple[int, int, SearchState]] = []
+    visited: set[frozenset[Tuple[str, str, str]]] = set()
+    counter = 0
+    
+    heapq.heappush(heap, (0, counter, initial))
+    counter += 1
+    
+    all_conflicts: Dict[Tuple[str, str, str], Rule] = {}
+    
+    while heap:
+        _, _, state = heapq.heappop(heap)
+        
+        # Skip if we've seen this conflict set
+        if state.detected_conflicts in visited:
+            continue
+        visited.add(state.detected_conflicts)
+        
+        # Record conflicts from this state
+        for key in state.detected_conflicts:
+            if key not in all_conflicts:
+                all_conflicts[key] = kb[key]
+        
+        # Expand neighbors using precomputed candidate keys
+        neighbors = _expand_neighbors(state, candidate_keys, kb)
+        
+        for new_state, new_key, conflict_score in neighbors:
+            if new_state.detected_conflicts not in visited:
+                # Priority: negative heuristic (explore high-severity paths first)
+                h = _compute_heuristic(new_state, kb)
+                heapq.heappush(heap, (-h, counter, new_state))
+                counter += 1
+    
+    # Convert to conflict list sorted by severity
+    results: List[Conflict] = []
+    for key, rule in all_conflicts.items():
         results.append(
             Conflict(
                 rtype=rule.rtype,
@@ -182,9 +298,10 @@ def bfs_conflicts(prescription: List[str], conditions: List[str], kb: Dict[Tuple
                 score=severity_to_score(rule.severity),
             )
         )
-        # No further expansion in this simplified BFS. In richer models, we could expand
-        # into implied risks (e.g., multi-drug syndromes) or add patient-specific modifiers.
-
+    
+    # Sort by severity descending (Major first)
+    results.sort(key=lambda c: (-c.score, c.item_a, c.item_b))
+    
     return results
 
 

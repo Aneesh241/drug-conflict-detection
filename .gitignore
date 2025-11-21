@@ -44,3 +44,8 @@ Thumbs.db
 # Output
 output/*.csv
 
+# Tests
+tests/
+
+#docs
+docs/
