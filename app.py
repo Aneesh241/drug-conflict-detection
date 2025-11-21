@@ -595,9 +595,17 @@ elif page == "Rules Engine":
 elif page == "Manual Testing":
     st.header("🧪 Manual Prescription Testing")
     
-    st.write("Test drug combinations for a patient manually to check for conflicts.")
+    st.write("Test drug combinations for a patient manually. Conflicts are detected in real-time as you select drugs.")
     
     _, drugs_data, _ = load_data()
+    
+    # Initialize session state for real-time testing
+    if 'rt_conditions' not in st.session_state:
+        st.session_state.rt_conditions = []
+    if 'rt_allergies' not in st.session_state:
+        st.session_state.rt_allergies = ["None"]
+    if 'rt_drugs' not in st.session_state:
+        st.session_state.rt_drugs = []
     
     col1, col2 = st.columns(2)
     
@@ -606,60 +614,112 @@ elif page == "Manual Testing":
         
         patient_name = st.text_input("Patient Name:", "Test Patient")
         
-        all_conditions = ["Hypertension", "Diabetes", "Infection", "Pain", "Anticoagulation"]
-        selected_conditions = st.multiselect("Select Conditions:", all_conditions)
+        all_conditions = ["Hypertension", "Diabetes", "Infection", "Pain", "Anticoagulation", "Heart Failure", "GERD"]
+        selected_conditions = st.multiselect("Select Conditions:", all_conditions, key="manual_conditions")
         
-        all_allergies = ["None", "Penicillin", "Aspirin", "Sulfa"]
-        selected_allergies = st.multiselect("Select Allergies:", all_allergies, default=["None"])
+        all_allergies = ["None", "Penicillin", "Aspirin", "Ibuprofen", "Sulfa"]
+        selected_allergies = st.multiselect("Select Allergies:", all_allergies, default=["None"], key="manual_allergies")
     
     with col2:
         st.subheader("Prescription")
         
-        drug_names = [drug['drug'] for drug in drugs_data]
-        selected_drugs = st.multiselect("Select Drugs:", drug_names)
+        drug_names = sorted([drug['drug'] for drug in drugs_data])
+        selected_drugs = st.multiselect("Select Drugs:", drug_names, key="manual_drugs", 
+                                       help="Conflicts are checked automatically as you select drugs")
     
     st.divider()
     
-    if st.button("🔍 Check for Conflicts", type="primary"):
-        if not selected_drugs:
-            st.warning("Please select at least one drug.")
-        else:
-            with st.spinner("Checking for conflicts..."):
-                # Create temporary model and test
-                base_dir = Path(__file__).parent
-                model = HealthcareModel(data_dir=base_dir)
+    # Real-time conflict checking
+    if selected_drugs:
+        # Create temporary model and test
+        base_dir = Path(__file__).parent
+        model = HealthcareModel(data_dir=base_dir)
+        
+        conflicts = model.rule_engine.check_conflicts(
+            prescription=selected_drugs,
+            conditions=selected_conditions,
+            allergies=selected_allergies if selected_allergies != ["None"] else []
+        )
+        
+        # Display real-time results
+        st.subheader("🔍 Real-Time Conflict Analysis")
+        
+        # Summary metrics
+        col_a, col_b, col_c, col_d = st.columns(4)
+        
+        with col_a:
+            st.metric("Drugs Selected", len(selected_drugs))
+        
+        with col_b:
+            if conflicts:
+                st.metric("Conflicts Found", len(conflicts), delta=f"-{len(conflicts)}", delta_color="inverse")
+            else:
+                st.metric("Conflicts Found", 0, delta="✓ Safe", delta_color="normal")
+        
+        with col_c:
+            major_count = sum(1 for c in conflicts if c['severity'] == 'Major')
+            if major_count > 0:
+                st.metric("Major", major_count, delta="Critical", delta_color="inverse")
+            else:
+                st.metric("Major", 0)
+        
+        with col_d:
+            moderate_count = sum(1 for c in conflicts if c['severity'] == 'Moderate')
+            if moderate_count > 0:
+                st.metric("Moderate", moderate_count, delta="Warning", delta_color="inverse")
+            else:
+                st.metric("Moderate", 0)
+        
+        st.divider()
+        
+        # Display conflicts with color coding
+        if conflicts:
+            st.error(f"⚠️ {len(conflicts)} conflict(s) detected in current prescription!")
+            
+            # Sort conflicts by severity
+            severity_order = {'Major': 3, 'Moderate': 2, 'Minor': 1}
+            conflicts.sort(key=lambda x: severity_order.get(x['severity'], 0), reverse=True)
+            
+            for conflict in conflicts:
+                severity_class = f"conflict-{conflict['severity'].lower()}"
                 
-                conflicts = model.rule_engine.check_conflicts(
-                    prescription=selected_drugs,
-                    conditions=selected_conditions,
-                    allergies=selected_allergies if selected_allergies != ["None"] else []
-                )
+                # Color-coded emoji based on severity
+                severity_emoji = {
+                    'Major': '🔴',
+                    'Moderate': '🟡',
+                    'Minor': '🟢'
+                }
                 
-                st.subheader("Results")
-                
-                if conflicts:
-                    st.error(f"⚠️ {len(conflicts)} conflict(s) detected!")
+                with st.container():
+                    st.markdown(f'<div class="{severity_class}">', unsafe_allow_html=True)
                     
-                    for conflict in conflicts:
-                        severity_class = f"conflict-{conflict['severity'].lower()}"
-                        
-                        with st.container():
-                            st.markdown(f'<div class="{severity_class}">', unsafe_allow_html=True)
-                            
-                            col1, col2 = st.columns(2)
-                            
-                            with col1:
-                                st.write(f"**Type:** {conflict['type']}")
-                                st.write(f"**Conflict:** {conflict['item_a']} ↔️ {conflict['item_b']}")
-                                st.write(f"**Severity:** {conflict['severity']}")
-                            
-                            with col2:
-                                st.write(f"**Score:** {conflict['score']}")
-                                st.write(f"**Recommendation:** {conflict['recommendation']}")
-                            
-                            st.markdown('</div>', unsafe_allow_html=True)
-                else:
-                    st.success("✅ No conflicts detected! This prescription is safe.")
+                    col1, col2 = st.columns([3, 1])
+                    
+                    with col1:
+                        st.markdown(f"### {severity_emoji.get(conflict['severity'], '⚠️')} {conflict['severity']} Severity")
+                        st.write(f"**Type:** {conflict['type']}")
+                        st.write(f"**Conflict:** {conflict['item_a']} ↔️ {conflict['item_b']}")
+                        st.write(f"**Recommendation:** {conflict['recommendation']}")
+                    
+                    with col2:
+                        st.metric("Risk Score", conflict['score'])
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.write("")  # Spacing
+        else:
+            st.success("✅ No conflicts detected! This prescription is safe for the patient.")
+            
+            # Show safe prescription summary
+            with st.expander("📋 Prescription Summary", expanded=True):
+                st.write(f"**Patient:** {patient_name}")
+                st.write(f"**Conditions:** {', '.join(selected_conditions) if selected_conditions else 'None'}")
+                allergy_display = [a for a in selected_allergies if a != "None"]
+                st.write(f"**Allergies:** {', '.join(allergy_display) if allergy_display else 'None'}")
+                st.write(f"**Prescribed Drugs:**")
+                for drug in selected_drugs:
+                    st.markdown(f"- 💊 {drug}")
+    else:
+        st.info("👆 Select drugs above to begin real-time conflict checking")
 
 # ============= IMPORT DATA PAGE =============
 elif page == "Import Data":
