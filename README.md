@@ -46,9 +46,9 @@ python main.py
 - Console summary
 - CSV report at `output/conflicts.csv`
 
-5) Optional: plot severity distribution
+5) Optional: plot severity distribution (now via utils helper)
 ```powershell
-python -c "import pandas as pd; from visualization import plot_severity_distribution; df=pd.read_csv('output/conflicts.csv'); plot_severity_distribution(df)"
+python -c "import pandas as pd; from utils import plot_severity_distribution; df=pd.read_csv('output/conflicts.csv'); plot_severity_distribution(df)"
 ```
 
 ## Data Contracts

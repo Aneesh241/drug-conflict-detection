@@ -203,3 +203,34 @@ def conflicts_to_frame(conflicts: List[dict | Conflict]) -> pd.DataFrame:
         else:
             rows.append(dict(c))
     return pd.DataFrame(rows)
+
+# -----------------
+# Optional plotting
+# -----------------
+
+def plot_severity_distribution(conflicts_df: pd.DataFrame):
+    """Plot a simple severity distribution bar chart.
+
+    Optional helper migrated from visualization.py to keep code centralized.
+    Uses lazy imports so normal simulation runs avoid importing heavy libs.
+    """
+    if conflicts_df.empty:
+        print("No conflicts to plot.")
+        return
+    try:
+        import matplotlib.pyplot as plt  # type: ignore
+        import seaborn as sns  # type: ignore
+    except ImportError as e:
+        print(f"Plot dependencies missing: {e}. Install matplotlib and seaborn.")
+        return
+    order = ["Major", "Moderate", "Minor"]
+    counts = conflicts_df["severity"].value_counts()
+    data = pd.DataFrame({"severity": counts.index, "count": counts.values})
+    data = data.set_index("severity").reindex(order).fillna(0).reset_index()
+    plt.figure(figsize=(6, 4))
+    sns.barplot(x="severity", y="count", data=data, order=order, palette="Reds")
+    plt.title("Conflict Severity Distribution")
+    plt.xlabel("Severity")
+    plt.ylabel("Count")
+    plt.tight_layout()
+    plt.show()
