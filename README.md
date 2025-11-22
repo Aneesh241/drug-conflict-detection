@@ -15,6 +15,7 @@ This project detects potential conflicts between prescribed drugs and patient co
 * **Rule Types**: Drug–Drug and Drug–Condition (includes allergy tokens e.g. `PenicillinAllergy`)
 * **Data-Driven**: All inputs are CSV and easily extensible
 * **Streamlit UI**: Filtering, manual testing, custom data import
+* **Advanced Visualizations**: Interactive network graphs, 3D scatter plots, Sankey diagrams, and heatmaps
 * **Professional Reports**: Generate PDF and Word documents with conflict analysis, patient details, and risk assessment
 * **CLI Mode**: Fast batch run via `main.py`
 * **Extensible Knowledge Base**: Add more rules without changing code
@@ -47,11 +48,12 @@ drug_conflict_detection/
 ├── model.py           # MESA model wiring & run loop
 ├── utils.py           # Data loading, rule KB, priority conflict evaluation, plotting helper
 ├── report_generator.py # PDF and Word report generation
+├── advanced_viz.py    # Advanced interactive visualizations (network graphs, 3D plots, etc.)
 ├── patients.csv       # Sample patient dataset
 ├── drugs.csv          # Sample drug catalog
 ├── rules.csv          # Interaction & contraindication rules
 ├── output/            # Generated reports (ignored in VCS recommended)
-├── tests/             # Pytest test suite (57 tests)
+├── tests/             # Pytest test suite (40 tests)
 └── requirements.txt   # Dependencies
 ```
 
@@ -220,7 +222,66 @@ pdf_bytes = generator.generate_report_bytes(
 pip install reportlab python-docx
 ```
 
-## 12. Roadmap (Suggested)
+## 12. Advanced Visualizations
+
+### Overview
+The system includes a dedicated **Visualizations** page with interactive charts powered by Plotly and NetworkX:
+
+### Available Visualizations
+
+#### 🕸️ Network Graph
+- **Purpose**: Visualize drug-drug and drug-condition relationships as an interactive network
+- **Features**:
+  - Nodes represent drugs and conditions
+  - Node size indicates number of connections (risk level)
+  - Edges represent conflicts, color-coded by severity (Red=Major, Orange=Moderate, Yellow=Minor)
+  - Interactive: hover for details, drag nodes, zoom/pan
+- **Use Case**: Identify high-risk drugs with many interactions
+
+#### 📊 3D Scatter Plot
+- **Purpose**: Three-dimensional analysis of conflicts
+- **Axes**:
+  - X: Conflict index
+  - Y: Severity score (1-10)
+  - Z: Severity level (Minor/Moderate/Major)
+- **Features**: Rotate, zoom, hover for conflict details
+- **Use Case**: Explore conflict distribution patterns
+
+#### 🔄 Sankey Diagram
+- **Purpose**: Flow visualization from prescriptions through drugs to conflicts
+- **Features**:
+  - Width of flows indicates frequency
+  - Color-coded by conflict severity
+  - Shows which drugs lead to which types of conflicts
+- **Use Case**: Trace conflict pathways and identify problematic prescription patterns
+
+#### 🔥 Heatmap Matrix
+- **Purpose**: Matrix view of drug-drug interactions
+- **Features**:
+  - Color intensity = severity level
+  - Interactive hover tooltips
+  - Symmetric matrix showing bidirectional conflicts
+- **Use Case**: Quick lookup of which drugs conflict with each other
+
+### Enhanced Chart Interactivity
+All existing charts (pie charts, bar charts) now include:
+- **Hover Tooltips**: Detailed information on hover
+- **Click Events**: Interactive filtering (where applicable)
+- **Donut Charts**: Pie charts with center hole for better readability
+- **Value Labels**: Direct display of counts and percentages
+- **Sorted Views**: Automatically sorted by frequency
+
+### Export Options
+- **JSON Export**: Download graph data and statistics
+- **Visualization Data**: Export network nodes/edges for external tools
+
+### Usage
+1. Run a simulation from the Dashboard
+2. Navigate to **Visualizations** page
+3. Explore different tabs for various visualization types
+4. Export data as needed for reports or presentations
+
+## 13. Roadmap (Suggested)
 * Expand rule dataset (≥500 entries)
 * Dosage & duration conflict checks
 * FastAPI/REST backend for integration

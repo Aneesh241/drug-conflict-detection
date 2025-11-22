@@ -12,6 +12,10 @@ import json
 from model import HealthcareModel
 from agents import PatientAgent
 from utils import load_patients, load_drugs, load_rules, build_rules_kb, get_conflicts_cached
+from advanced_viz import (
+    create_interaction_network, create_3d_conflict_scatter,
+    create_sankey_diagram, create_heatmap_matrix, enhance_chart_interactivity
+)
 
 # Page configuration
 st.set_page_config(
@@ -245,7 +249,7 @@ with st.sidebar:
     
     page = st.radio(
         "Select Page:",
-        ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data"]
+        ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data", "Visualizations"]
     )
     
     st.divider()
@@ -308,7 +312,13 @@ if page == "Dashboard":
                     names=sev_counts.index,
                     title="Conflicts by Severity",
                     color=sev_counts.index,
-                    color_discrete_map={'Major': '#f44336', 'Moderate': '#ff9800', 'Minor': '#fbc02d'}
+                    color_discrete_map={'Major': '#f44336', 'Moderate': '#ff9800', 'Minor': '#fbc02d'},
+                    hole=0.3  # Make it a donut chart
+                )
+                fig.update_traces(
+                    textposition='inside',
+                    textinfo='percent+label',
+                    hovertemplate='<b>%{label}</b><br>Count: %{value}<br>Percentage: %{percent}<extra></extra>'
                 )
                 st.plotly_chart(fig, use_container_width=True)
                 
@@ -320,7 +330,17 @@ if page == "Dashboard":
                     title="Conflicts by Type",
                     labels={'x': 'Conflict Type', 'y': 'Count'},
                     color=type_counts.values,
-                    color_continuous_scale='Blues'
+                    color_continuous_scale='Blues',
+                    text=type_counts.values
+                )
+                fig2.update_traces(
+                    textposition='outside',
+                    hovertemplate='<b>%{x}</b><br>Count: %{y}<extra></extra>'
+                )
+                fig2.update_layout(
+                    xaxis_title="Conflict Type",
+                    yaxis_title="Number of Conflicts",
+                    showlegend=False
                 )
                 st.plotly_chart(fig2, use_container_width=True)
             else:
@@ -762,11 +782,27 @@ elif page == "Rules Engine":
             rule_triggers[key] = rule_triggers.get(key, 0) + 1
         
         if rule_triggers:
+            # Sort by trigger count
+            sorted_triggers = dict(sorted(rule_triggers.items(), key=lambda x: x[1], reverse=True)[:10])
+            
             fig = px.bar(
-                x=list(rule_triggers.keys()),
-                y=list(rule_triggers.values()),
-                title="Most Frequently Triggered Rules",
-                labels={'x': 'Rule', 'y': 'Trigger Count'}
+                x=list(sorted_triggers.values()),
+                y=list(sorted_triggers.keys()),
+                orientation='h',
+                title="Top 10 Most Frequently Triggered Rules",
+                labels={'x': 'Trigger Count', 'y': 'Drug Interaction'},
+                color=list(sorted_triggers.values()),
+                color_continuous_scale='Reds',
+                text=list(sorted_triggers.values())
+            )
+            fig.update_traces(
+                textposition='outside',
+                hovertemplate='<b>%{y}</b><br>Triggered: %{x} times<extra></extra>'
+            )
+            fig.update_layout(
+                yaxis={'categoryorder':'total ascending'},
+                showlegend=False,
+                height=max(400, len(sorted_triggers) * 40)
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -1194,6 +1230,119 @@ drug-condition,Hypertension,Ibuprofen,Moderate,Prefer Paracetamol,May raise BP""
             st.session_state.simulation_run = False
             st.success("All data reset to defaults!")
             st.rerun()
+
+# ============= VISUALIZATIONS PAGE =============
+elif page == "Visualizations":
+    st.header("📊 Advanced Visualizations")
+    
+    if not st.session_state.simulation_run:
+        st.info("⚠️ Please run a simulation first to generate visualizations.")
+        st.stop()
+    
+    df = st.session_state.conflicts_df
+    
+    if df.empty:
+        st.success("✅ No conflicts detected! All prescriptions are safe.")
+        st.stop()
+    
+    # Tabs for different visualization types
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "🕸️ Network Graph", 
+        "📊 3D Analysis", 
+        "🔄 Flow Diagram", 
+        "🔥 Heatmap"
+    ])
+    
+    with tab1:
+        st.subheader("Drug Interaction Network")
+        st.write("Interactive network showing relationships between drugs and conditions. "
+                 "Node size = number of connections. Edge color = conflict severity.")
+        
+        conflicts_list = df.to_dict('records')
+        network_fig = create_interaction_network(conflicts_list)
+        st.plotly_chart(network_fig, use_container_width=True)
+        
+        st.info("💡 **Tip**: Hover over nodes to see details. Drugs with more connections pose higher risk.")
+    
+    with tab2:
+        st.subheader("3D Conflict Analysis")
+        st.write("Three-dimensional view of conflicts by index, severity score, and severity level. "
+                 "Rotate and zoom to explore the data.")
+        
+        scatter_3d = create_3d_conflict_scatter(df)
+        st.plotly_chart(scatter_3d, use_container_width=True)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Conflicts", len(df))
+        with col2:
+            avg_score = df['score'].mean()
+            st.metric("Avg Severity Score", f"{avg_score:.2f}")
+        with col3:
+            major_count = len(df[df['severity'] == 'Major'])
+            st.metric("Major Conflicts", major_count)
+    
+    with tab3:
+        st.subheader("Prescription Flow Diagram")
+        st.write("Sankey diagram showing flow from prescriptions through drugs to conflicts. "
+                 "Width indicates frequency.")
+        
+        # Build simplified prescription data
+        prescriptions = {}
+        sankey_fig = create_sankey_diagram(conflicts_list, prescriptions)
+        st.plotly_chart(sankey_fig, use_container_width=True)
+        
+        st.info("💡 **Tip**: Wider flows indicate more frequent conflict pathways.")
+    
+    with tab4:
+        st.subheader("Drug-Drug Interaction Heatmap")
+        st.write("Matrix view showing which drugs conflict with each other. "
+                 "Color intensity = severity level.")
+        
+        heatmap_fig = create_heatmap_matrix(df)
+        st.plotly_chart(heatmap_fig, use_container_width=True)
+        
+        # Legend
+        st.markdown("""
+        **Color Legend:**
+        - 🟡 Yellow = Minor conflict
+        - 🟠 Orange = Moderate conflict  
+        - 🔴 Red = Major conflict
+        """)
+    
+    # Download visualizations data
+    st.divider()
+    st.subheader("📥 Export Visualization Data")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        # Export conflict graph as JSON
+        graph_data = {
+            'nodes': df['item_a'].tolist() + df['item_b'].tolist(),
+            'edges': df[['item_a', 'item_b', 'severity', 'score']].to_dict('records')
+        }
+        st.download_button(
+            label="Download Graph Data (JSON)",
+            data=json.dumps(graph_data, indent=2),
+            file_name="conflict_graph.json",
+            mime="application/json"
+        )
+    
+    with col2:
+        # Export summary statistics
+        stats = {
+            'total_conflicts': len(df),
+            'by_severity': df['severity'].value_counts().to_dict(),
+            'by_type': df['type'].value_counts().to_dict(),
+            'avg_score': float(df['score'].mean()),
+            'max_score': int(df['score'].max())
+        }
+        st.download_button(
+            label="Download Stats (JSON)",
+            data=json.dumps(stats, indent=2),
+            file_name="conflict_stats.json",
+            mime="application/json"
+        )
 
 # Footer
 st.divider()
