@@ -155,13 +155,6 @@ def create_default_users() -> Dict:
             'role': 'Pharmacist',
             'email': 'pharmacist@drugconflict.com',
             'created_at': datetime.now().isoformat()
-        },
-        'viewer': {
-            'username': 'viewer',
-            'password': hash_password('Viewer@123'),
-            'role': 'Viewer',
-            'email': 'viewer@drugconflict.com',
-            'created_at': datetime.now().isoformat()
         }
     }
 

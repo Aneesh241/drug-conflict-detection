@@ -17,7 +17,7 @@ This project detects potential conflicts between prescribed drugs and patient co
 * **Streamlit UI**: Filtering, manual testing, custom data import
 * **Advanced Visualizations**: Interactive network graphs, 3D scatter plots, Sankey diagrams, and heatmaps
 * **Professional Reports**: Generate PDF and Word documents with conflict analysis, patient details, and risk assessment
-* **Security & Authentication**: User authentication with role-based access control (Admin, Doctor, Pharmacist, Viewer)
+* **Security & Authentication**: User authentication with role-based access control (Admin, Doctor, Pharmacist)
 * **Input Validation**: Comprehensive validation and sanitization to prevent XSS, SQL injection, and other security threats
 * **CLI Mode**: Fast batch run via `main.py`
 * **Extensible Knowledge Base**: Add more rules without changing code
@@ -300,7 +300,6 @@ The system creates default accounts on first launch:
 | `admin` | `Admin@123` | Admin | Full system access, user management |
 | `doctor` | `Doctor@123` | Doctor | Can prescribe, view reports, run simulations |
 | `pharmacist` | `Pharma@123` | Pharmacist | View-only, can generate reports |
-| `viewer` | `Viewer@123` | Viewer | Limited read-only access |
 
 **⚠️ Security Notice**: Change default passwords immediately in production!
 
@@ -323,13 +322,6 @@ The system creates default accounts on first launch:
 - Review conflicts and rules
 - Generate reports
 - No prescription or simulation rights
-
-#### Viewer
-- View dashboard and statistics
-- Browse drug database
-- View conflict rules
-- Access visualizations
-- No data modification rights
 
 ### Security Features
 

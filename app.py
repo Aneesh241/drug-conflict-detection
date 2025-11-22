@@ -303,11 +303,6 @@ if not is_authenticated():
             - Username: `pharmacist`
             - Password: `Pharma@123`
             - View-only with report access
-            
-            **Viewer Account:**
-            - Username: `viewer`
-            - Password: `Viewer@123`
-            - Limited read-only access
             """)
     
     st.stop()
@@ -1502,7 +1497,7 @@ elif page == "User Management":
         with st.form("add_user_form"):
             new_username = st.text_input("Username", placeholder="Enter username (alphanumeric only)")
             new_password = st.text_input("Password", type="password", placeholder="Enter password")
-            new_role = st.selectbox("Role", ["Admin", "Doctor", "Pharmacist", "Viewer"])
+            new_role = st.selectbox("Role", ["Admin", "Doctor", "Pharmacist"])
             new_email = st.text_input("Email (optional)", placeholder="user@example.com")
             
             submit = st.form_submit_button("Add User", type="primary")

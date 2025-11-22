@@ -18,7 +18,6 @@ class Role(Enum):
     ADMIN = "Admin"
     DOCTOR = "Doctor"
     PHARMACIST = "Pharmacist"
-    VIEWER = "Viewer"
 
 
 class Permission(Enum):
@@ -129,15 +128,6 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
         
         Permission.GENERATE_REPORT,
         Permission.EXPORT_DATA,
-    },
-    
-    Role.VIEWER: {
-        # Read-only access to public information
-        Permission.VIEW_DASHBOARD,
-        Permission.VIEW_DRUGS,
-        Permission.VIEW_RULES,
-        Permission.VIEW_ANALYTICS,
-        Permission.VIEW_VISUALIZATIONS,
     }
 }
 
@@ -349,7 +339,6 @@ def get_role_badge_html(role: Role) -> str:
         Role.ADMIN: "#dc3545",      # Red
         Role.DOCTOR: "#0d6efd",     # Blue
         Role.PHARMACIST: "#198754", # Green
-        Role.VIEWER: "#6c757d",     # Gray
     }
     
     color = colors.get(role, "#6c757d")
@@ -442,8 +431,3 @@ def is_doctor() -> bool:
 def is_pharmacist() -> bool:
     """Check if current user is pharmacist"""
     return get_user_role() == Role.PHARMACIST
-
-
-def is_viewer() -> bool:
-    """Check if current user is viewer"""
-    return get_user_role() == Role.VIEWER
