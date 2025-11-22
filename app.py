@@ -508,13 +508,120 @@ elif page == "Conflicts":
                     st.markdown('</div>', unsafe_allow_html=True)
                     st.divider()
             
-            # Export button
-            st.download_button(
-                label="📥 Download Conflicts Report (CSV)",
-                data=filtered_df.to_csv(index=False),
-                file_name=f"conflicts_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv"
-            )
+            # Export buttons
+            st.subheader("📥 Export Options")
+            
+            col_e1, col_e2, col_e3 = st.columns(3)
+            
+            with col_e1:
+                st.download_button(
+                    label="📊 Download CSV",
+                    data=filtered_df.to_csv(index=False),
+                    file_name=f"conflicts_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            
+            with col_e2:
+                if st.button("📕 Generate PDF Report", use_container_width=True):
+                    try:
+                        from report_generator import ReportGenerator
+                        
+                        # Group conflicts by patient for comprehensive report
+                        if len(filtered_df) > 0:
+                            # Take first patient or generate summary
+                            first_row = filtered_df.iloc[0]
+                            patient_name = first_row['patient_name']
+                            
+                            # Get prescription details
+                            prescription = first_row['prescription'].split(', ') if ', ' in first_row['prescription'] else [first_row['prescription']]
+                            
+                            # Prepare conflicts list
+                            conflicts_list = []
+                            for _, row in filtered_df.iterrows():
+                                conflicts_list.append({
+                                    'type': row['type'],
+                                    'item_a': row['item_a'],
+                                    'item_b': row['item_b'],
+                                    'severity': row['severity'],
+                                    'recommendation': row['recommendation'],
+                                    'score': row['score']
+                                })
+                            
+                            generator = ReportGenerator()
+                            pdf_bytes = generator.generate_report_bytes(
+                                format_type='pdf',
+                                patient_name=patient_name,
+                                patient_id=f"SIM-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                                conditions=[],
+                                allergies=[],
+                                prescription=prescription,
+                                conflicts=conflicts_list
+                            )
+                            
+                            filename = f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                            st.download_button(
+                                label="💾 Save PDF",
+                                data=pdf_bytes,
+                                file_name=filename,
+                                mime="application/pdf",
+                                use_container_width=True,
+                                key="pdf_download_conflicts"
+                            )
+                            st.success("✅ PDF report ready!")
+                        
+                    except ImportError:
+                        st.error("📦 Install reportlab: `pip install reportlab`")
+                    except Exception as e:
+                        st.error(f"❌ Error: {str(e)}")
+            
+            with col_e3:
+                if st.button("📘 Generate Word Report", use_container_width=True):
+                    try:
+                        from report_generator import ReportGenerator
+                        
+                        if len(filtered_df) > 0:
+                            first_row = filtered_df.iloc[0]
+                            patient_name = first_row['patient_name']
+                            prescription = first_row['prescription'].split(', ') if ', ' in first_row['prescription'] else [first_row['prescription']]
+                            
+                            conflicts_list = []
+                            for _, row in filtered_df.iterrows():
+                                conflicts_list.append({
+                                    'type': row['type'],
+                                    'item_a': row['item_a'],
+                                    'item_b': row['item_b'],
+                                    'severity': row['severity'],
+                                    'recommendation': row['recommendation'],
+                                    'score': row['score']
+                                })
+                            
+                            generator = ReportGenerator()
+                            word_bytes = generator.generate_report_bytes(
+                                format_type='word',
+                                patient_name=patient_name,
+                                patient_id=f"SIM-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                                conditions=[],
+                                allergies=[],
+                                prescription=prescription,
+                                conflicts=conflicts_list
+                            )
+                            
+                            filename = f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+                            st.download_button(
+                                label="💾 Save Word",
+                                data=word_bytes,
+                                file_name=filename,
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                use_container_width=True,
+                                key="word_download_conflicts"
+                            )
+                            st.success("✅ Word report ready!")
+                        
+                    except ImportError:
+                        st.error("📦 Install python-docx: `pip install python-docx`")
+                    except Exception as e:
+                        st.error(f"❌ Error: {str(e)}")
 
 # ============= DRUG DATABASE PAGE =============
 elif page == "Drug Database":
@@ -752,6 +859,74 @@ elif page == "Manual Testing":
                 st.write(f"**Prescribed Drugs:**")
                 for drug in selected_drugs:
                     st.markdown(f"- 💊 {drug}")
+        
+        # Export Report Section
+        st.divider()
+        st.subheader("📄 Export Report")
+        
+        col_exp1, col_exp2 = st.columns(2)
+        
+        with col_exp1:
+            if st.button("📕 Download PDF Report", use_container_width=True):
+                try:
+                    from report_generator import ReportGenerator
+                    
+                    generator = ReportGenerator()
+                    pdf_bytes = generator.generate_report_bytes(
+                        format_type='pdf',
+                        patient_name=patient_name,
+                        patient_id=f"TEST-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        conditions=selected_conditions if selected_conditions else [],
+                        allergies=[a for a in selected_allergies if a != "None"],
+                        prescription=selected_drugs,
+                        conflicts=conflicts
+                    )
+                    
+                    filename = f"conflict_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                    st.download_button(
+                        label="💾 Save PDF",
+                        data=pdf_bytes,
+                        file_name=filename,
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                    st.success("✅ PDF report generated!")
+                    
+                except ImportError:
+                    st.error("📦 Please install reportlab: `pip install reportlab`")
+                except Exception as e:
+                    st.error(f"❌ Error generating PDF: {str(e)}")
+        
+        with col_exp2:
+            if st.button("📘 Download Word Report", use_container_width=True):
+                try:
+                    from report_generator import ReportGenerator
+                    
+                    generator = ReportGenerator()
+                    word_bytes = generator.generate_report_bytes(
+                        format_type='word',
+                        patient_name=patient_name,
+                        patient_id=f"TEST-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                        conditions=selected_conditions if selected_conditions else [],
+                        allergies=[a for a in selected_allergies if a != "None"],
+                        prescription=selected_drugs,
+                        conflicts=conflicts
+                    )
+                    
+                    filename = f"conflict_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+                    st.download_button(
+                        label="💾 Save Word",
+                        data=word_bytes,
+                        file_name=filename,
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        use_container_width=True
+                    )
+                    st.success("✅ Word report generated!")
+                    
+                except ImportError:
+                    st.error("📦 Please install python-docx: `pip install python-docx`")
+                except Exception as e:
+                    st.error(f"❌ Error generating Word report: {str(e)}")
     else:
         st.info("👆 Select drugs above to begin real-time conflict checking")
 

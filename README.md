@@ -15,6 +15,8 @@ This project detects potential conflicts between prescribed drugs and patient co
 * **Rule Types**: Drug–Drug and Drug–Condition (includes allergy tokens e.g. `PenicillinAllergy`)
 * **Data-Driven**: All inputs are CSV and easily extensible
 * **Streamlit UI**: Filtering, manual testing, custom data import
+* **Professional Reports**: Generate PDF and Word documents with conflict analysis, patient details, and risk assessment
+* **Audit Logging**: Comprehensive event tracking with SQLite backend (optional)
 * **CLI Mode**: Fast batch run via `main.py`
 * **Extensible Knowledge Base**: Add more rules without changing code
 
@@ -45,10 +47,13 @@ drug_conflict_detection/
 ├── main.py            # CLI entry point
 ├── model.py           # MESA model wiring & run loop
 ├── utils.py           # Data loading, rule KB, priority conflict evaluation, plotting helper
+├── report_generator.py # PDF and Word report generation
+├── audit_log.py       # Optional audit logging system (SQLite)
 ├── patients.csv       # Sample patient dataset
 ├── drugs.csv          # Sample drug catalog
 ├── rules.csv          # Interaction & contraindication rules
 ├── output/            # Generated reports (ignored in VCS recommended)
+├── tests/             # Pytest test suite (57 tests)
 └── requirements.txt   # Dependencies
 ```
 
@@ -127,7 +132,97 @@ Simple priority queue over candidate pairs (no state exploration). Upgraded to t
 | Rich agent interaction | Implement messaging or negotiation in agent `step()` functions. |
 | Replace naive prescribing | Enhance `DoctorAgent.prescribe()` with decision rules or ML ranking. |
 
-## 11. Roadmap (Suggested)
+## 11. Report Generation
+
+### Overview
+Generate professional PDF and Word documents for conflict analysis results with:
+- Patient information and prescription details
+- Detailed conflict analysis with severity breakdown
+- Color-coded severity indicators (Major = Red, Moderate = Orange, Minor = Yellow)
+- Risk assessment summary
+- Clinical recommendations
+- Professional disclaimers
+
+### Usage in Streamlit
+**Manual Testing Page**:
+1. Select patient conditions, allergies, and drugs
+2. Review detected conflicts
+3. Click "Download PDF Report" or "Download Word Report"
+4. Save the generated report
+
+**Conflicts Page** (after simulation):
+1. View simulation conflicts
+2. Apply filters as needed
+3. Click "Generate PDF Report" or "Generate Word Report"
+4. Download comprehensive analysis
+
+### Programmatic Usage
+```python
+from report_generator import ReportGenerator
+
+generator = ReportGenerator()
+
+# Generate PDF
+generator.generate_pdf_report(
+    output_path="report.pdf",
+    patient_name="John Doe",
+    patient_id="P123",
+    conditions=["Hypertension", "Diabetes"],
+    allergies=["Penicillin"],
+    prescription=["Aspirin", "Metformin", "Lisinopril"],
+    conflicts=[
+        {
+            'type': 'drug-drug',
+            'item_a': 'Aspirin',
+            'item_b': 'Warfarin',
+            'severity': 'Major',
+            'recommendation': 'Avoid concurrent use',
+            'score': 9
+        }
+    ]
+)
+
+# Generate Word document
+generator.generate_word_report(
+    output_path="report.docx",
+    patient_name="Jane Smith",
+    patient_id="P456",
+    conditions=["Pain"],
+    allergies=[],
+    prescription=["Acetaminophen"],
+    conflicts=[]
+)
+
+# Generate for streaming/download (returns BytesIO)
+pdf_bytes = generator.generate_report_bytes(
+    format_type='pdf',
+    patient_name="Test Patient",
+    # ... other parameters
+)
+```
+
+### Report Contents
+**PDF Reports Include**:
+- Title with generation timestamp
+- Patient demographics table
+- Prescribed medications list
+- Conflict analysis with color-coded severity
+- Risk level assessment (HIGH/MODERATE/LOW/MINIMAL)
+- Clinical recommendations
+- Professional disclaimer
+
+**Word Reports Include**:
+- Same structure as PDF
+- Formatted tables and styled text
+- Color-coded severity indicators
+- Suitable for editing and customization
+
+### Requirements
+```powershell
+pip install reportlab python-docx
+```
+
+## 12. Roadmap (Suggested)
 * Expand rule dataset (≥500 entries)
 * Dosage & duration conflict checks
 * FastAPI/REST backend for integration
@@ -136,7 +231,7 @@ Simple priority queue over candidate pairs (no state exploration). Upgraded to t
 * Authentication for dashboard (multi‑user)
 * ML‑assisted severity prediction & alternative recommendations
 
-## 12. Troubleshooting
+## 13. Troubleshooting
 | Issue | Fix |
 |-------|-----|
 | `ModuleNotFoundError` (mesa/streamlit) | Re-run `pip install -r requirements.txt` in the active venv. |
@@ -144,19 +239,22 @@ Simple priority queue over candidate pairs (no state exploration). Upgraded to t
 | Empty conflicts CSV | Sample data may produce few conflicts—add more rules or conditions. |
 | Plot says dependencies missing | Install: `pip install matplotlib seaborn`. |
 
-## 13. Testing
+## 14. Testing
 
 ### Running Tests
 ```powershell
-# All tests (17 tests)
+# All tests (57 tests)
 pytest tests/ -v
 
 # Specific test files
-pytest tests/test_bfs_search.py -v           # BFS algorithm tests (7)
-pytest tests/test_conflict_detection.py -v   # Integration tests (2)
-pytest tests/test_doctor_prescribe.py -v     # Doctor agent tests (2)
-pytest tests/test_data_models.py -v          # Data validation tests (3)
-pytest tests/test_memoization.py -v          # Cache layer tests (3)
+pytest tests/test_bfs_search.py -v               # BFS algorithm tests (7)
+pytest tests/test_conflict_detection.py -v       # Integration tests (2)
+pytest tests/test_doctor_prescribe.py -v         # Doctor agent tests (2)
+pytest tests/test_data_models.py -v              # Data validation tests (3)
+pytest tests/test_memoization.py -v              # Cache layer tests (3)
+pytest tests/test_realtime_ui.py -v              # Real-time UI tests (6)
+pytest tests/test_audit_log.py -v                # Audit logging tests (17)
+pytest tests/test_report_generator.py -v         # Report generation tests (17)
 ```
 
 ### Test Coverage
@@ -165,6 +263,9 @@ pytest tests/test_memoization.py -v          # Cache layer tests (3)
 - ✅ **Data Validation**: Pydantic models, semicolon parsing, ID coercion
 - ✅ **Doctor Logic**: Risk-aware prescribing, allergy checking, replacements
 - ✅ **Memoization Layer**: Cache hits/misses, KB invalidation
+- ✅ **Real-time UI**: Live conflict detection, caching, performance
+- ✅ **Audit Logging**: Event tracking, filtering, patient history, JSON export
+- ✅ **Report Generation**: PDF/Word creation, content validation, edge cases
 
 ### Adding Tests
 Place new tests in `tests/` directory. Use fixtures from `conftest.py` for model setup.
