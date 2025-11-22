@@ -15,6 +15,7 @@ This project detects potential conflicts between prescribed drugs and patient co
 * **Rule Types**: Drug–Drug and Drug–Condition (includes allergy tokens e.g. `PenicillinAllergy`)
 * **Data-Driven**: All inputs are CSV and easily extensible
 * **Streamlit UI**: Filtering, manual testing, custom data import
+* **Dark Mode & UI Enhancements**: Toggle between Light/Dark/Auto themes with responsive design and accessibility improvements
 * **Professional Reports**: Generate PDF and Word documents with conflict analysis, patient details, and risk assessment
 * **Audit Logging**: Comprehensive event tracking with SQLite backend (optional)
 * **CLI Mode**: Fast batch run via `main.py`
@@ -79,7 +80,14 @@ Outputs:
 ```powershell
 streamlit run app.py
 ```
-Sidebar → “Run Simulation” to populate views. Explore conflicts, patients, manual testing, and import custom CSVs.
+Sidebar → "Run Simulation" to populate views. Explore conflicts, patients, manual testing, and import custom CSVs.
+
+**Theme Options**:
+- **Light**: Traditional bright theme
+- **Dark**: Eye-friendly dark theme with enhanced contrast
+- **Auto**: Automatically matches system preference (defaults to Dark)
+
+Toggle themes via the sidebar's Theme selector for instant switching.
 
 ### C. Optional Plot (Matplotlib/Seaborn)
 ```powershell
