@@ -32,14 +32,8 @@ logger = get_logger()
 # -----------------
 
 def _read_raw(path: Path | str) -> List[dict]:
-    """Read CSV file with security validation"""
+    """Read CSV file - sanitization not needed for trusted CSV files"""
     df = pd.read_csv(Path(path))
-    
-    # Sanitize all string columns
-    for col in df.columns:
-        if df[col].dtype == 'object':  # String columns
-            df[col] = df[col].apply(lambda x: sanitize_string(str(x)) if pd.notna(x) else x)
-    
     return df.to_dict(orient="records")
 
 def load_patients(path: Path | str) -> List[dict]:

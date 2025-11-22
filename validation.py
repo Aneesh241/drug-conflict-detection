@@ -241,13 +241,15 @@ def sanitize_string(input_str: str, max_length: int = 1000) -> str:
     # Remove HTML/script tags
     sanitized = re.sub(r'<[^>]+>', '', sanitized)
     
-    # Remove potentially dangerous characters
-    sanitized = re.sub(r'[<>\"\'%;()&+]', '', sanitized)
+    # Remove only the most dangerous characters (XSS/injection)
+    # Keep parentheses, semicolons (for CSV lists), and common punctuation
+    sanitized = re.sub(r'[<>\"\'%&]', '', sanitized)
     
-    # Remove SQL keywords (basic protection)
-    sql_keywords = ['DROP', 'DELETE', 'INSERT', 'UPDATE', 'SELECT', 'UNION', '--', ';']
-    for keyword in sql_keywords:
-        sanitized = re.sub(f'(?i){keyword}', '', sanitized)
+    # Remove SQL keywords only if they appear in suspicious patterns
+    # Don't remove from normal text (e.g., "select medication")
+    sanitized = re.sub(r'\b(DROP|DELETE|INSERT|UPDATE)\s+(TABLE|FROM|INTO)', '', sanitized, flags=re.IGNORECASE)
+    sanitized = re.sub(r'UNION\s+SELECT', '', sanitized, flags=re.IGNORECASE)
+    sanitized = re.sub(r'--\s*$', '', sanitized)  # SQL comments at end of line
     
     return sanitized.strip()
 

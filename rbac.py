@@ -136,12 +136,12 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
 PAGE_PERMISSIONS: Dict[str, Permission] = {
     "Dashboard": Permission.VIEW_DASHBOARD,
     "Patients": Permission.VIEW_PATIENTS,
-    "Drugs": Permission.VIEW_DRUGS,
-    "Rules Engine": Permission.VIEW_RULES,
+    "Prescription Simulator": Permission.PRESCRIBE_DRUGS,
     "Conflicts": Permission.VIEW_CONFLICTS,
-    "Reports": Permission.VIEW_REPORTS,
-    "Simulation": Permission.VIEW_SIMULATION,
-    "Analytics": Permission.VIEW_ANALYTICS,
+    "Drug Database": Permission.VIEW_DRUGS,
+    "Rules Engine": Permission.VIEW_RULES,
+    "Manual Testing": Permission.PRESCRIBE_DRUGS,
+    "Import Data": Permission.ADD_DRUG,  # Requires admin/data modification rights
     "Visualizations": Permission.VIEW_VISUALIZATIONS,
 }
 
