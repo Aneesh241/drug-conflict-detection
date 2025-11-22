@@ -12,6 +12,11 @@ import json
 from model import HealthcareModel
 from agents import PatientAgent
 from utils import load_patients, load_drugs, load_rules, build_rules_kb, get_conflicts_cached
+try:
+    from audit_log import get_audit_logger, EventType, Severity
+    AUDIT_ENABLED = True
+except ImportError:
+    AUDIT_ENABLED = False
 
 # Page configuration
 st.set_page_config(
@@ -203,7 +208,7 @@ with st.sidebar:
     
     page = st.radio(
         "Select Page:",
-        ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data"]
+        ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data", "Audit Logs"]
     )
     
     st.divider()
