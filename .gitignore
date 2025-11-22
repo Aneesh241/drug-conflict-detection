@@ -46,6 +46,3 @@ output/*.csv
 
 # Temporary data
 temp_data/
-
-audit_log.db
-test_audit.db
