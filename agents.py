@@ -6,11 +6,6 @@ import random
 from mesa import Agent
 
 from utils import bfs_conflicts, build_rules_kb, make_condition_tokens, severity_to_score, logger
-try:
-    from audit_log import get_audit_logger, EventType, Severity
-    AUDIT_ENABLED = True
-except ImportError:
-    AUDIT_ENABLED = False
 
 
 class PatientAgent(Agent):
@@ -88,21 +83,6 @@ class DoctorAgent(Agent):
 
         logger.info(f"Doctor prescribed for {patient.name} (risk-aware): {chosen}")
         
-        # Audit logging
-        if AUDIT_ENABLED:
-            try:
-                audit_logger = get_audit_logger()
-                audit_logger.log_event(
-                    event_type=EventType.DOCTOR_PRESCRIBE,
-                    actor="doctor_agent",
-                    patient_id=patient.patient_id,
-                    patient_name=patient.name,
-                    prescription=chosen,
-                    metadata={"conditions": patient.conditions, "allergies": patient.allergies}
-                )
-            except Exception:
-                pass  # Don't fail prescription if audit logging fails
-        
         return chosen
 
     def step(self):
@@ -143,23 +123,6 @@ class PharmacistAgent(Agent):
         logger.info(
             f"Pharmacist validated {patient.name}: {len(conflicts)} conflict(s) detected"
         )
-        
-        # Audit logging
-        if AUDIT_ENABLED:
-            try:
-                audit_logger = get_audit_logger()
-                severity = Severity.WARNING if conflicts else Severity.INFO
-                audit_logger.log_event(
-                    event_type=EventType.PHARMACIST_REVIEW,
-                    actor="pharmacist_agent",
-                    severity=severity,
-                    patient_id=patient.patient_id,
-                    patient_name=patient.name,
-                    prescription=prescription,
-                    conflicts=conflicts
-                )
-            except Exception:
-                pass  # Don't fail validation if audit logging fails
         
         return conflicts
 
