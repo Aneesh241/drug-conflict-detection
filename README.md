@@ -15,9 +15,7 @@ This project detects potential conflicts between prescribed drugs and patient co
 * **Rule Types**: Drug–Drug and Drug–Condition (includes allergy tokens e.g. `PenicillinAllergy`)
 * **Data-Driven**: All inputs are CSV and easily extensible
 * **Streamlit UI**: Filtering, manual testing, custom data import
-* **Dark Mode & UI Enhancements**: Toggle between Light/Dark/Auto themes with responsive design and accessibility improvements
 * **Professional Reports**: Generate PDF and Word documents with conflict analysis, patient details, and risk assessment
-* **Audit Logging**: Comprehensive event tracking with SQLite backend (optional)
 * **CLI Mode**: Fast batch run via `main.py`
 * **Extensible Knowledge Base**: Add more rules without changing code
 
@@ -49,7 +47,6 @@ drug_conflict_detection/
 ├── model.py           # MESA model wiring & run loop
 ├── utils.py           # Data loading, rule KB, priority conflict evaluation, plotting helper
 ├── report_generator.py # PDF and Word report generation
-├── audit_log.py       # Optional audit logging system (SQLite)
 ├── patients.csv       # Sample patient dataset
 ├── drugs.csv          # Sample drug catalog
 ├── rules.csv          # Interaction & contraindication rules
@@ -81,13 +78,6 @@ Outputs:
 streamlit run app.py
 ```
 Sidebar → "Run Simulation" to populate views. Explore conflicts, patients, manual testing, and import custom CSVs.
-
-**Theme Options**:
-- **Light**: Traditional bright theme
-- **Dark**: Eye-friendly dark theme with enhanced contrast
-- **Auto**: Automatically matches system preference (defaults to Dark)
-
-Toggle themes via the sidebar's Theme selector for instant switching.
 
 ### C. Optional Plot (Matplotlib/Seaborn)
 ```powershell
@@ -251,7 +241,7 @@ pip install reportlab python-docx
 
 ### Running Tests
 ```powershell
-# All tests (57 tests)
+# All tests (40 tests)
 pytest tests/ -v
 
 # Specific test files
@@ -261,7 +251,6 @@ pytest tests/test_doctor_prescribe.py -v         # Doctor agent tests (2)
 pytest tests/test_data_models.py -v              # Data validation tests (3)
 pytest tests/test_memoization.py -v              # Cache layer tests (3)
 pytest tests/test_realtime_ui.py -v              # Real-time UI tests (6)
-pytest tests/test_audit_log.py -v                # Audit logging tests (17)
 pytest tests/test_report_generator.py -v         # Report generation tests (17)
 ```
 
@@ -272,7 +261,6 @@ pytest tests/test_report_generator.py -v         # Report generation tests (17)
 - ✅ **Doctor Logic**: Risk-aware prescribing, allergy checking, replacements
 - ✅ **Memoization Layer**: Cache hits/misses, KB invalidation
 - ✅ **Real-time UI**: Live conflict detection, caching, performance
-- ✅ **Audit Logging**: Event tracking, filtering, patient history, JSON export
 - ✅ **Report Generation**: PDF/Word creation, content validation, edge cases
 
 ### Adding Tests

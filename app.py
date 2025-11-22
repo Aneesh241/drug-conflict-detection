@@ -12,11 +12,6 @@ import json
 from model import HealthcareModel
 from agents import PatientAgent
 from utils import load_patients, load_drugs, load_rules, build_rules_kb, get_conflicts_cached
-try:
-    from audit_log import get_audit_logger, EventType, Severity
-    AUDIT_ENABLED = True
-except ImportError:
-    AUDIT_ENABLED = False
 
 # Page configuration
 st.set_page_config(
@@ -43,382 +38,82 @@ if 'custom_rules' not in st.session_state:
     st.session_state.custom_rules = None
 if 'cached_kb' not in st.session_state:
     st.session_state.cached_kb = None
-if 'theme' not in st.session_state:
-    st.session_state.theme = 'Light'
 
-# Theme Configuration
-def get_effective_theme(theme_choice):
-    """Get effective theme based on user choice and system preference"""
-    if theme_choice == 'Auto':
-        # Use JavaScript to detect system preference
-        # Default to Light if detection fails
-        return 'Dark'  # For now, default Auto to Dark (can enhance with JS later)
-    return theme_choice
+# Apply light theme CSS
+st.markdown("""
+<style>
+/* Light Theme */
+.main-header {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #1f77b4;
+    text-align: center;
+    margin-bottom: 2rem;
+}
 
-def get_theme_css(theme):
-    """Generate CSS based on selected theme"""
-    effective_theme = get_effective_theme(theme)
-    
-    if effective_theme == 'Dark':
-        return """
-        <style>
-        /* Dark Theme Variables */
-        :root {
-            --bg-primary: #0e1117;
-            --bg-secondary: #262730;
-            --bg-card: #1e1e2e;
-            --text-primary: #fafafa;
-            --text-secondary: #b0b0b0;
-            --border-color: #3d3d4d;
-            --accent-red: #ff4b4b;
-            --accent-green: #21c354;
-            --accent-blue: #00c0f2;
-            --accent-orange: #ffa421;
-        }
-        
-        /* Main Layout */
-        .stApp {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-        }
-        
-        /* Headers */
-        .main-header {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--accent-blue);
-            text-align: center;
-            margin-bottom: 2rem;
-            text-shadow: 0 0 10px rgba(0, 192, 242, 0.3);
-        }
-        
-        h1, h2, h3, h4, h5, h6 {
-            color: var(--text-primary) !important;
-        }
-        
-        /* Metric Cards */
-        .metric-card {
-            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
-            padding: 1.5rem;
-            border-radius: 0.8rem;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .metric-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 192, 242, 0.2);
-        }
-        
-        /* Conflict Severity Cards */
-        .conflict-major {
-            background-color: rgba(255, 75, 75, 0.1);
-            padding: 1rem;
-            border-left: 4px solid #ff4444;
-            border-radius: 0.5rem;
-            margin: 0.5rem 0;
-            backdrop-filter: blur(10px);
-        }
-        
-        .conflict-moderate {
-            background-color: rgba(255, 164, 33, 0.1);
-            padding: 1rem;
-            border-left: 4px solid #ffaa44;
-            border-radius: 0.5rem;
-            margin: 0.5rem 0;
-            backdrop-filter: blur(10px);
-        }
-        
-        .conflict-minor {
-            background-color: rgba(255, 221, 68, 0.1);
-            padding: 1rem;
-            border-left: 4px solid #ffdd44;
-            border-radius: 0.5rem;
-            margin: 0.5rem 0;
-            backdrop-filter: blur(10px);
-        }
-        
-        /* Sidebar */
-        [data-testid="stSidebar"] {
-            background-color: var(--bg-secondary);
-            border-right: 1px solid var(--border-color);
-        }
-        
-        [data-testid="stSidebar"] .stButton button {
-            width: 100%;
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        [data-testid="stSidebar"] .stButton button:hover {
-            background-color: #0099cc;
-            transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(0, 192, 242, 0.4);
-        }
-        
-        /* Buttons */
-        .stButton button {
-            border-radius: 0.5rem;
-            font-weight: 500;
-            transition: all 0.3s;
-            border: 1px solid var(--border-color);
-        }
-        
-        .stButton button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-        
-        /* Download Buttons */
-        .stDownloadButton button {
-            background: linear-gradient(135deg, var(--accent-green) 0%, #1a9c40 100%);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
-        }
-        
-        .stDownloadButton button:hover {
-            background: linear-gradient(135deg, #1a9c40 0%, var(--accent-green) 100%);
-        }
-        
-        /* Input Fields */
-        .stTextInput input, .stTextArea textarea, .stSelectbox select {
-            background-color: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-        }
-        
-        .stTextInput input:focus, .stTextArea textarea:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 2px rgba(0, 192, 242, 0.2);
-        }
-        
-        /* Multiselect */
-        .stMultiSelect [data-baseweb="tag"] {
-            background-color: var(--accent-blue);
-            color: white;
-        }
-        
-        /* DataFrames */
-        .dataframe {
-            background-color: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-        
-        .dataframe th {
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            font-weight: 600;
-        }
-        
-        .dataframe tr:hover {
-            background-color: rgba(0, 192, 242, 0.1);
-        }
-        
-        /* Expanders */
-        .streamlit-expanderHeader {
-            background-color: var(--bg-card);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-        }
-        
-        .streamlit-expanderHeader:hover {
-            background-color: var(--bg-secondary);
-        }
-        
-        /* Success/Error/Warning/Info Messages */
-        .stSuccess {
-            background-color: rgba(33, 195, 84, 0.1);
-            border-left: 4px solid var(--accent-green);
-            color: var(--text-primary);
-        }
-        
-        .stError {
-            background-color: rgba(255, 75, 75, 0.1);
-            border-left: 4px solid var(--accent-red);
-            color: var(--text-primary);
-        }
-        
-        .stWarning {
-            background-color: rgba(255, 164, 33, 0.1);
-            border-left: 4px solid var(--accent-orange);
-            color: var(--text-primary);
-        }
-        
-        .stInfo {
-            background-color: rgba(0, 192, 242, 0.1);
-            border-left: 4px solid var(--accent-blue);
-            color: var(--text-primary);
-        }
-        
-        /* Metrics */
-        [data-testid="stMetricValue"] {
-            color: var(--accent-blue);
-            font-size: 2rem;
-            font-weight: 700;
-        }
-        
-        [data-testid="stMetricLabel"] {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        
-        /* Tabs */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 8px;
-        }
-        
-        .stTabs [data-baseweb="tab"] {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem 0.5rem 0 0;
-            color: var(--text-secondary);
-        }
-        
-        .stTabs [aria-selected="true"] {
-            background-color: var(--bg-secondary);
-            color: var(--accent-blue);
-            border-bottom: 2px solid var(--accent-blue);
-        }
-        
-        /* File Uploader */
-        [data-testid="stFileUploader"] {
-            background-color: var(--bg-card);
-            border: 2px dashed var(--border-color);
-            border-radius: 0.8rem;
-            padding: 2rem;
-        }
-        
-        [data-testid="stFileUploader"]:hover {
-            border-color: var(--accent-blue);
-            background-color: rgba(0, 192, 242, 0.05);
-        }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-blue);
-        }
-        
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .element-container {
-            animation: fadeIn 0.3s ease-out;
-        }
-        
-        /* Divider */
-        hr {
-            border-color: var(--border-color);
-            margin: 2rem 0;
-        }
-        </style>
-        """
-    else:  # Light theme
-        return """
-        <style>
-        /* Light Theme */
-        .main-header {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #1f77b4;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .metric-card {
-            background: linear-gradient(135deg, #f0f2f6 0%, #e8eaf0 100%);
-            padding: 1.5rem;
-            border-radius: 0.8rem;
-            text-align: center;
-            border: 1px solid #d0d2d6;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .metric-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(31, 119, 180, 0.2);
-        }
-        
-        .conflict-major {
-            background-color: #ffebee;
-            padding: 1rem;
-            border-left: 4px solid #f44336;
-            border-radius: 0.5rem;
-            margin: 0.5rem 0;
-        }
-        
-        .conflict-moderate {
-            background-color: #fff3e0;
-            padding: 1rem;
-            border-left: 4px solid #ff9800;
-            border-radius: 0.5rem;
-            margin: 0.5rem 0;
-        }
-        
-        .conflict-minor {
-            background-color: #fff9c4;
-            padding: 1rem;
-            border-left: 4px solid #fbc02d;
-            border-radius: 0.5rem;
-            margin: 0.5rem 0;
-        }
-        
-        /* Button hover effects */
-        .stButton button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s;
-        }
-        
-        /* File Uploader */
-        [data-testid="stFileUploader"]:hover {
-            border-color: #1f77b4;
-            background-color: rgba(31, 119, 180, 0.05);
-        }
-        
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .element-container {
-            animation: fadeIn 0.3s ease-out;
-        }
-        </style>
-        """
+.metric-card {
+    background: linear-gradient(135deg, #f0f2f6 0%, #e8eaf0 100%);
+    padding: 1.5rem;
+    border-radius: 0.8rem;
+    text-align: center;
+    border: 1px solid #d0d2d6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
 
-# Apply theme CSS
-st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(31, 119, 180, 0.2);
+}
+
+.conflict-major {
+    background-color: #ffebee;
+    padding: 1rem;
+    border-left: 4px solid #f44336;
+    border-radius: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.conflict-moderate {
+    background-color: #fff3e0;
+    padding: 1rem;
+    border-left: 4px solid #ff9800;
+    border-radius: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.conflict-minor {
+    background-color: #fff9c4;
+    padding: 1rem;
+    border-left: 4px solid #fbc02d;
+    border-radius: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+/* Button hover effects */
+.stButton button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s;
+}
+
+/* File Uploader */
+[data-testid="stFileUploader"]:hover {
+    border-color: #1f77b4;
+    background-color: rgba(31, 119, 180, 0.05);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.element-container {
+    animation: fadeIn 0.3s ease-out;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # Helper functions
 def load_data():
@@ -548,26 +243,9 @@ with st.sidebar:
     st.image("https://img.icons8.com/color/96/000000/pill.png", width=80)
     st.title("🏥 Navigation")
     
-    # Theme Toggle
-    st.divider()
-    st.subheader("🎨 Theme")
-    theme_option = st.radio(
-        "Select Theme:",
-        ["Light", "Dark", "Auto"],
-        index=["Light", "Dark", "Auto"].index(st.session_state.theme),
-        horizontal=True,
-        help="Choose your preferred color theme"
-    )
-    
-    if theme_option != st.session_state.theme:
-        st.session_state.theme = theme_option
-        st.rerun()
-    
-    st.divider()
-    
     page = st.radio(
         "Select Page:",
-        ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data", "Audit Logs"]
+        ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data"]
     )
     
     st.divider()
@@ -632,8 +310,6 @@ if page == "Dashboard":
                     color=sev_counts.index,
                     color_discrete_map={'Major': '#f44336', 'Moderate': '#ff9800', 'Minor': '#fbc02d'}
                 )
-                if get_effective_theme(st.session_state.theme) == 'Dark':
-                    fig.update_layout(template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True)
                 
                 # Conflict type distribution
@@ -646,8 +322,6 @@ if page == "Dashboard":
                     color=type_counts.values,
                     color_continuous_scale='Blues'
                 )
-                if get_effective_theme(st.session_state.theme) == 'Dark':
-                    fig2.update_layout(template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig2, use_container_width=True)
             else:
                 st.success("✅ No conflicts detected! All prescriptions are safe.")
@@ -1094,8 +768,6 @@ elif page == "Rules Engine":
                 title="Most Frequently Triggered Rules",
                 labels={'x': 'Rule', 'y': 'Trigger Count'}
             )
-            if get_effective_theme(st.session_state.theme) == 'Dark':
-                fig.update_layout(template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig, use_container_width=True)
 
 # ============= MANUAL TESTING PAGE =============
