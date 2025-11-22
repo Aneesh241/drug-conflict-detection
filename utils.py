@@ -9,6 +9,7 @@ from functools import lru_cache
 
 import pandas as pd
 from data_models import PatientModel, DrugModel, RuleModel, validate_rows
+from validation import sanitize_string, check_xss_attempt, check_sql_injection, validate_input_safe
 
 # -----------------
 # Logging utilities
@@ -31,7 +32,14 @@ logger = get_logger()
 # -----------------
 
 def _read_raw(path: Path | str) -> List[dict]:
+    """Read CSV file with security validation"""
     df = pd.read_csv(Path(path))
+    
+    # Sanitize all string columns
+    for col in df.columns:
+        if df[col].dtype == 'object':  # String columns
+            df[col] = df[col].apply(lambda x: sanitize_string(str(x)) if pd.notna(x) else x)
+    
     return df.to_dict(orient="records")
 
 def load_patients(path: Path | str) -> List[dict]:

@@ -16,6 +16,17 @@ from advanced_viz import (
     create_interaction_network, create_3d_conflict_scatter,
     create_sankey_diagram, create_heatmap_matrix, enhance_chart_interactivity
 )
+from auth import (
+    initialize_session_state as init_auth_session,
+    is_authenticated, authenticate_user, logout_user, get_current_user,
+    create_default_users
+)
+from rbac import (
+    get_user_role, has_permission, can_access_page, get_accessible_pages,
+    require_permission, get_role_badge_html,
+    Permission, Role, is_admin
+)
+from validation import sanitize_string
 
 # Page configuration
 st.set_page_config(
@@ -24,6 +35,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Initialize authentication session state
+init_auth_session()
 
 # Initialize session state (must be before theme logic)
 if 'model' not in st.session_state:
@@ -242,25 +256,113 @@ def get_severity_color(severity):
     }
     return colors.get(severity, '#757575')
 
+# ============= LOGIN PAGE =============
+if not is_authenticated():
+    st.markdown('<div class="main-header">💊 Drug Conflict Detection System</div>', unsafe_allow_html=True)
+    st.markdown("---")
+    
+    # Center the login form
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        st.subheader("🔐 Login")
+        st.info("Please login to access the system")
+        
+        with st.form("login_form"):
+            username = st.text_input("Username", placeholder="Enter your username")
+            password = st.text_input("Password", type="password", placeholder="Enter your password")
+            submit = st.form_submit_button("Login", use_container_width=True, type="primary")
+            
+            if submit:
+                if not username or not password:
+                    st.error("Please enter both username and password")
+                else:
+                    success, error_msg = authenticate_user(username, password)
+                    
+                    if success:
+                        st.success(f"Welcome, {username}!")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ {error_msg}")
+        
+        # Show default credentials
+        st.divider()
+        with st.expander("ℹ️ Default Credentials"):
+            st.markdown("""
+            **Admin Account:**
+            - Username: `admin`
+            - Password: `Admin@123`
+            - Full system access
+            
+            **Doctor Account:**
+            - Username: `doctor`
+            - Password: `Doctor@123`
+            - Can prescribe and view reports
+            
+            **Pharmacist Account:**
+            - Username: `pharmacist`
+            - Password: `Pharma@123`
+            - View-only with report access
+            
+            **Viewer Account:**
+            - Username: `viewer`
+            - Password: `Viewer@123`
+            - Limited read-only access
+            """)
+    
+    st.stop()
+
+# User is authenticated - show main interface
+user = get_current_user()
+
 # Sidebar
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/000000/pill.png", width=80)
     st.title("🏥 Navigation")
     
+    # User info section
+    st.markdown("### 👤 User Info")
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown(f"**{user.username}**")
+    with col2:
+        st.markdown(get_role_badge_html(get_user_role()), unsafe_allow_html=True)
+    
+    if st.button("🚪 Logout", use_container_width=True):
+        logout_user()
+        st.rerun()
+    
+    st.divider()
+    
+    # Get accessible pages for current role
+    all_pages = ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data", "Visualizations"]
+    accessible_pages = []
+    
+    for pg in all_pages:
+        if can_access_page(pg, get_user_role()):
+            accessible_pages.append(pg)
+    
+    # Add special pages for admin
+    if is_admin():
+        accessible_pages.append("User Management")
+    
     page = st.radio(
         "Select Page:",
-        ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data", "Visualizations"]
+        accessible_pages
     )
     
     st.divider()
     
     # Quick Actions
     st.subheader("Quick Actions")
-    if st.button("🔄 Run Simulation", use_container_width=True, type="primary"):
-        with st.spinner("Running simulation..."):
-            run_simulation()
-        st.success("Simulation completed!")
-        st.rerun()
+    
+    # Only show run simulation if user has permission
+    if has_permission(Permission.RUN_SIMULATION):
+        if st.button("🔄 Run Simulation", use_container_width=True, type="primary"):
+            with st.spinner("Running simulation..."):
+                run_simulation()
+            st.success("Simulation completed!")
+            st.rerun()
     
     if st.session_state.simulation_run:
         st.info(f"Last run: {st.session_state.last_run}")
@@ -1343,6 +1445,127 @@ elif page == "Visualizations":
             file_name="conflict_stats.json",
             mime="application/json"
         )
+
+# ============= USER MANAGEMENT PAGE (Admin Only) =============
+elif page == "User Management":
+    require_permission(Permission.MANAGE_USERS)
+    
+    st.header("👥 User Management")
+    st.markdown("Manage user accounts and permissions")
+    
+    from auth import get_all_users, add_user, delete_user, change_password
+    from validation import validate_password_strength
+    
+    tabs = st.tabs(["User List", "Add New User", "Change Password"])
+    
+    # Tab 1: User List
+    with tabs[0]:
+        st.subheader("Current Users")
+        
+        users = get_all_users()
+        if users:
+            users_df = pd.DataFrame(users)
+            
+            st.dataframe(
+                users_df,
+                use_container_width=True,
+                hide_index=True
+            )
+            
+            st.info(f"Total Users: {len(users)}")
+            
+            # Delete user
+            st.divider()
+            st.subheader("Delete User")
+            
+            usernames = [u['username'] for u in users if u['username'] != user.username]
+            
+            if usernames:
+                user_to_delete = st.selectbox("Select user to delete:", usernames)
+                
+                if st.button("🗑️ Delete User", type="secondary"):
+                    success, error_msg = delete_user(user_to_delete)
+                    if success:
+                        st.success(f"User '{user_to_delete}' deleted successfully!")
+                        st.rerun()
+                    else:
+                        st.error(f"Error: {error_msg}")
+            else:
+                st.warning("No other users to delete")
+        else:
+            st.warning("No users found")
+    
+    # Tab 2: Add New User
+    with tabs[1]:
+        st.subheader("Add New User")
+        
+        with st.form("add_user_form"):
+            new_username = st.text_input("Username", placeholder="Enter username (alphanumeric only)")
+            new_password = st.text_input("Password", type="password", placeholder="Enter password")
+            new_role = st.selectbox("Role", ["Admin", "Doctor", "Pharmacist", "Viewer"])
+            new_email = st.text_input("Email (optional)", placeholder="user@example.com")
+            
+            submit = st.form_submit_button("Add User", type="primary")
+            
+            if submit:
+                if not new_username or not new_password:
+                    st.error("Username and password are required")
+                else:
+                    # Validate password strength
+                    is_strong, pwd_errors = validate_password_strength(new_password)
+                    
+                    if not is_strong:
+                        st.error("Password does not meet requirements:")
+                        for err in pwd_errors:
+                            st.error(f"  - {err}")
+                    else:
+                        success, error_msg = add_user(new_username, new_password, new_role, new_email)
+                        
+                        if success:
+                            st.success(f"User '{new_username}' added successfully!")
+                            st.rerun()
+                        else:
+                            st.error(f"Error: {error_msg}")
+        
+        st.info("""
+        **Password Requirements:**
+        - At least 8 characters long
+        - Contains uppercase and lowercase letters
+        - Contains at least one digit
+        - Contains at least one special character
+        """)
+    
+    # Tab 3: Change Password
+    with tabs[2]:
+        st.subheader("Change Password")
+        
+        with st.form("change_password_form"):
+            old_password = st.text_input("Current Password", type="password")
+            new_password1 = st.text_input("New Password", type="password")
+            new_password2 = st.text_input("Confirm New Password", type="password")
+            
+            submit = st.form_submit_button("Change Password", type="primary")
+            
+            if submit:
+                if not old_password or not new_password1 or not new_password2:
+                    st.error("All fields are required")
+                elif new_password1 != new_password2:
+                    st.error("New passwords do not match")
+                else:
+                    # Validate password strength
+                    is_strong, pwd_errors = validate_password_strength(new_password1)
+                    
+                    if not is_strong:
+                        st.error("Password does not meet requirements:")
+                        for err in pwd_errors:
+                            st.error(f"  - {err}")
+                    else:
+                        success, error_msg = change_password(user.username, old_password, new_password1)
+                        
+                        if success:
+                            st.success("Password changed successfully!")
+                        else:
+                            st.error(f"Error: {error_msg}")
 
 # Footer
 st.divider()

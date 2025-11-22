@@ -135,8 +135,7 @@ def create_interaction_network(conflicts: List[Dict[str, Any]]) -> go.Figure:
     ))
     
     fig.update_layout(
-        title="Drug Interaction Network",
-        titlefont_size=16,
+        title=dict(text="Drug Interaction Network", font=dict(size=16)),
         showlegend=True,
         hovermode='closest',
         margin=dict(b=20, l=5, r=5, t=40),

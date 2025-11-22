@@ -17,6 +17,8 @@ This project detects potential conflicts between prescribed drugs and patient co
 * **Streamlit UI**: Filtering, manual testing, custom data import
 * **Advanced Visualizations**: Interactive network graphs, 3D scatter plots, Sankey diagrams, and heatmaps
 * **Professional Reports**: Generate PDF and Word documents with conflict analysis, patient details, and risk assessment
+* **Security & Authentication**: User authentication with role-based access control (Admin, Doctor, Pharmacist, Viewer)
+* **Input Validation**: Comprehensive validation and sanitization to prevent XSS, SQL injection, and other security threats
 * **CLI Mode**: Fast batch run via `main.py`
 * **Extensible Knowledge Base**: Add more rules without changing code
 
@@ -49,9 +51,13 @@ drug_conflict_detection/
 ├── utils.py           # Data loading, rule KB, priority conflict evaluation, plotting helper
 ├── report_generator.py # PDF and Word report generation
 ├── advanced_viz.py    # Advanced interactive visualizations (network graphs, 3D plots, etc.)
+├── auth.py            # Authentication system (login, session management, password hashing)
+├── rbac.py            # Role-Based Access Control (permissions, roles, access checks)
+├── validation.py      # Input validation and sanitization (XSS, SQL injection prevention)
 ├── patients.csv       # Sample patient dataset
 ├── drugs.csv          # Sample drug catalog
 ├── rules.csv          # Interaction & contraindication rules
+├── users.json         # User accounts database (generated on first run)
 ├── output/            # Generated reports (ignored in VCS recommended)
 ├── tests/             # Pytest test suite (40 tests)
 └── requirements.txt   # Dependencies
@@ -281,24 +287,133 @@ All existing charts (pie charts, bar charts) now include:
 3. Explore different tabs for various visualization types
 4. Export data as needed for reports or presentations
 
-## 13. Roadmap (Suggested)
+## 13. Security & Authentication
+
+### Overview
+The system includes a comprehensive security layer with user authentication and role-based access control (RBAC).
+
+### Default User Accounts
+The system creates default accounts on first launch:
+
+| Username | Password | Role | Permissions |
+|----------|----------|------|-------------|
+| `admin` | `Admin@123` | Admin | Full system access, user management |
+| `doctor` | `Doctor@123` | Doctor | Can prescribe, view reports, run simulations |
+| `pharmacist` | `Pharma@123` | Pharmacist | View-only, can generate reports |
+| `viewer` | `Viewer@123` | Viewer | Limited read-only access |
+
+**⚠️ Security Notice**: Change default passwords immediately in production!
+
+### Role Permissions
+
+#### Admin
+- Full access to all pages and features
+- User management (add/delete users, change passwords)
+- System settings and configuration
+- View audit logs (when enabled)
+
+#### Doctor
+- View and edit patient information
+- Run simulations and prescribe drugs
+- Generate and export reports
+- Access all analytics and visualizations
+
+#### Pharmacist
+- View patient and drug information
+- Review conflicts and rules
+- Generate reports
+- No prescription or simulation rights
+
+#### Viewer
+- View dashboard and statistics
+- Browse drug database
+- View conflict rules
+- Access visualizations
+- No data modification rights
+
+### Security Features
+
+#### Authentication
+- **Secure Login**: Username/password authentication with bcrypt hashing
+- **Session Management**: Automatic session timeout after 30 minutes of inactivity
+- **Login Rate Limiting**: Maximum 5 failed attempts, 15-minute lockout period
+- **Password Requirements**:
+  - Minimum 8 characters
+  - At least one uppercase letter
+  - At least one lowercase letter
+  - At least one digit
+  - At least one special character
+
+#### Input Validation & Sanitization
+- **XSS Prevention**: HTML/JavaScript tag removal from user inputs
+- **SQL Injection Prevention**: Sanitization of database-like operations
+- **Path Traversal Protection**: Validation of file paths
+- **CSV Validation**: Schema validation for all uploaded data
+- **Data Type Checking**: Strict type and range validation
+
+#### Access Control
+- **Page-Level Restrictions**: Role-based page access
+- **Action-Level Permissions**: Fine-grained control over operations
+- **Dynamic Navigation**: Users only see pages they can access
+- **Permission Checks**: Real-time validation of user permissions
+
+### User Management (Admin Only)
+
+#### Adding New Users
+1. Login as admin
+2. Navigate to **User Management** page
+3. Click **Add New User** tab
+4. Fill in username, password, role, and email
+5. Click **Add User**
+
+#### Changing Passwords
+1. Navigate to **User Management** page
+2. Click **Change Password** tab
+3. Enter current and new passwords
+4. Password must meet strength requirements
+
+#### Deleting Users
+1. Navigate to **User Management** page
+2. Select user from dropdown (cannot delete yourself or last admin)
+3. Click **Delete User**
+4. Confirm action
+
+### Security Best Practices
+1. **Change Default Passwords**: Immediately after first login
+2. **Use Strong Passwords**: Follow complexity requirements
+3. **Regular Password Updates**: Change passwords periodically
+4. **Principle of Least Privilege**: Assign minimal necessary permissions
+5. **Monitor Access**: Review user activity in audit logs (when enabled)
+6. **Secure Environment**: Use HTTPS in production deployments
+7. **Data Backup**: Regularly backup `users.json` and patient data
+
+### Technical Implementation
+- **Password Hashing**: bcrypt with salt (cost factor 12)
+- **Session Storage**: Streamlit session state
+- **Permission System**: Enum-based permission definitions
+- **Validation**: Pydantic models + custom sanitizers
+- **Security Patterns**: Input validation, output encoding, secure defaults
+
+## 14. Roadmap (Suggested)
 * Expand rule dataset (≥500 entries)
 * Dosage & duration conflict checks
 * FastAPI/REST backend for integration
 * Test suite (pytest) & coverage reports
 * Persistent DB layer (PostgreSQL) replacing CSVs
-* Authentication for dashboard (multi‑user)
+* Enhanced audit logging with activity tracking
 * ML‑assisted severity prediction & alternative recommendations
 
-## 13. Troubleshooting
+## 15. Troubleshooting
 | Issue | Fix |
 |-------|-----|
-| `ModuleNotFoundError` (mesa/streamlit) | Re-run `pip install -r requirements.txt` in the active venv. |
+| `ModuleNotFoundError` (mesa/streamlit/bcrypt) | Re-run `pip install -r requirements.txt` in the active venv. |
 | Streamlit exit code 1 | Check virtual env activation; try `streamlit cache clear`; specify alternate port `--server.port 8502`. |
 | Empty conflicts CSV | Sample data may produce few conflicts—add more rules or conditions. |
 | Plot says dependencies missing | Install: `pip install matplotlib seaborn`. |
+| Cannot login | Check `users.json` exists; use default credentials; ensure bcrypt installed. |
+| "Access Denied" errors | Check user role permissions; login as admin for full access. |
 
-## 14. Testing
+## 16. Testing
 
 ### Running Tests
 ```powershell
@@ -326,16 +441,17 @@ pytest tests/test_report_generator.py -v         # Report generation tests (17)
 
 ### Adding Tests
 Place new tests in `tests/` directory. Use fixtures from `conftest.py` for model setup.
-## 14. Medical Disclaimer
+
+## 17. Medical Disclaimer
 This repository is for **educational and prototyping purposes only**. It does **not** provide medical advice and must **not** be used for real clinical decision making. Always consult qualified healthcare professionals.
 
-## 15. Contribution Guidelines (Lightweight)
+## 18. Contribution Guidelines (Lightweight)
 1. Create a feature branch (`git checkout -b feature/name`).
 2. Keep changes focused & documented in commit messages.
 3. Add/adjust tests when logic changes.
 4. Open a Pull Request describing rationale & impact.
 
-## 16. License
+## 19. License
 If you intend to open source formally, add a LICENSE file (e.g. MIT). Currently no explicit license is bundled.
 
 ---
