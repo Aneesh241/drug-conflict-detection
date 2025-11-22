@@ -527,39 +527,51 @@ elif page == "Conflicts":
                     try:
                         from report_generator import ReportGenerator
                         
-                        # Group conflicts by patient for comprehensive report
+                        # Generate summary report with all conflicts
                         if len(filtered_df) > 0:
-                            # Take first patient or generate summary
-                            first_row = filtered_df.iloc[0]
-                            patient_name = first_row['patient_name']
+                            # Create a summary report for all patients
+                            unique_patients = filtered_df['patient_name'].unique()
                             
-                            # Get prescription details
-                            prescription = first_row['prescription'].split(', ') if ', ' in first_row['prescription'] else [first_row['prescription']]
+                            if len(unique_patients) == 1:
+                                # Single patient - use their details
+                                first_row = filtered_df.iloc[0]
+                                patient_name = first_row['patient_name']
+                                patient_id = str(first_row['patient_id'])
+                                prescription = first_row['prescription'].split(';') if ';' in first_row['prescription'] else first_row['prescription'].split(', ')
+                            else:
+                                # Multiple patients - create summary
+                                patient_name = f"Simulation Summary ({len(unique_patients)} patients)"
+                                patient_id = f"SIM-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                                prescription = []
                             
-                            # Prepare conflicts list
+                            # Prepare conflicts list with patient names
                             conflicts_list = []
                             for _, row in filtered_df.iterrows():
-                                conflicts_list.append({
+                                conflict_dict = {
                                     'type': row['type'],
                                     'item_a': row['item_a'],
                                     'item_b': row['item_b'],
                                     'severity': row['severity'],
                                     'recommendation': row['recommendation'],
                                     'score': row['score']
-                                })
+                                }
+                                # Add patient name to recommendation for multi-patient reports
+                                if len(unique_patients) > 1:
+                                    conflict_dict['recommendation'] = f"[{row['patient_name']}] {conflict_dict['recommendation']}"
+                                conflicts_list.append(conflict_dict)
                             
                             generator = ReportGenerator()
                             pdf_bytes = generator.generate_report_bytes(
                                 format_type='pdf',
                                 patient_name=patient_name,
-                                patient_id=f"SIM-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                                patient_id=patient_id,
                                 conditions=[],
                                 allergies=[],
                                 prescription=prescription,
                                 conflicts=conflicts_list
                             )
                             
-                            filename = f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                            filename = f"conflicts_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
                             st.download_button(
                                 label="💾 Save PDF",
                                 data=pdf_bytes,
@@ -581,33 +593,49 @@ elif page == "Conflicts":
                         from report_generator import ReportGenerator
                         
                         if len(filtered_df) > 0:
-                            first_row = filtered_df.iloc[0]
-                            patient_name = first_row['patient_name']
-                            prescription = first_row['prescription'].split(', ') if ', ' in first_row['prescription'] else [first_row['prescription']]
+                            # Create a summary report for all patients
+                            unique_patients = filtered_df['patient_name'].unique()
                             
+                            if len(unique_patients) == 1:
+                                # Single patient - use their details
+                                first_row = filtered_df.iloc[0]
+                                patient_name = first_row['patient_name']
+                                patient_id = str(first_row['patient_id'])
+                                prescription = first_row['prescription'].split(';') if ';' in first_row['prescription'] else first_row['prescription'].split(', ')
+                            else:
+                                # Multiple patients - create summary
+                                patient_name = f"Simulation Summary ({len(unique_patients)} patients)"
+                                patient_id = f"SIM-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                                prescription = []
+                            
+                            # Prepare conflicts list with patient names
                             conflicts_list = []
                             for _, row in filtered_df.iterrows():
-                                conflicts_list.append({
+                                conflict_dict = {
                                     'type': row['type'],
                                     'item_a': row['item_a'],
                                     'item_b': row['item_b'],
                                     'severity': row['severity'],
                                     'recommendation': row['recommendation'],
                                     'score': row['score']
-                                })
+                                }
+                                # Add patient name to recommendation for multi-patient reports
+                                if len(unique_patients) > 1:
+                                    conflict_dict['recommendation'] = f"[{row['patient_name']}] {conflict_dict['recommendation']}"
+                                conflicts_list.append(conflict_dict)
                             
                             generator = ReportGenerator()
                             word_bytes = generator.generate_report_bytes(
                                 format_type='word',
                                 patient_name=patient_name,
-                                patient_id=f"SIM-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                                patient_id=patient_id,
                                 conditions=[],
                                 allergies=[],
                                 prescription=prescription,
                                 conflicts=conflicts_list
                             )
                             
-                            filename = f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+                            filename = f"conflicts_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
                             st.download_button(
                                 label="💾 Save Word",
                                 data=word_bytes,
@@ -731,8 +759,8 @@ elif page == "Manual Testing":
         all_conditions = ["Hypertension", "Diabetes", "Infection", "Pain", "Anticoagulation", "Heart Failure", "GERD"]
         selected_conditions = st.multiselect("Select Conditions:", all_conditions, key="manual_conditions")
         
-        all_allergies = ["None", "Penicillin", "Aspirin", "Ibuprofen", "Sulfa"]
-        selected_allergies = st.multiselect("Select Allergies:", all_allergies, default=["None"], key="manual_allergies")
+        all_allergies = ["Penicillin", "Aspirin", "Ibuprofen", "Sulfa"]
+        selected_allergies = st.multiselect("Select Allergies:", all_allergies, key="manual_allergies")
     
     with col2:
         st.subheader("Prescription")
@@ -760,7 +788,7 @@ elif page == "Manual Testing":
             from utils import make_condition_tokens
             conditions_tokens = make_condition_tokens(
                 selected_conditions,
-                selected_allergies if selected_allergies != ["None"] else []
+                selected_allergies if selected_allergies else []
             )
             
             conflicts_list = get_conflicts_cached(
@@ -854,8 +882,7 @@ elif page == "Manual Testing":
             with st.expander("📋 Prescription Summary", expanded=True):
                 st.write(f"**Patient:** {patient_name}")
                 st.write(f"**Conditions:** {', '.join(selected_conditions) if selected_conditions else 'None'}")
-                allergy_display = [a for a in selected_allergies if a != "None"]
-                st.write(f"**Allergies:** {', '.join(allergy_display) if allergy_display else 'None'}")
+                st.write(f"**Allergies:** {', '.join(selected_allergies) if selected_allergies else 'None'}")
                 st.write(f"**Prescribed Drugs:**")
                 for drug in selected_drugs:
                     st.markdown(f"- 💊 {drug}")
@@ -877,7 +904,7 @@ elif page == "Manual Testing":
                         patient_name=patient_name,
                         patient_id=f"TEST-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                         conditions=selected_conditions if selected_conditions else [],
-                        allergies=[a for a in selected_allergies if a != "None"],
+                        allergies=selected_allergies if selected_allergies else [],
                         prescription=selected_drugs,
                         conflicts=conflicts
                     )
@@ -908,7 +935,7 @@ elif page == "Manual Testing":
                         patient_name=patient_name,
                         patient_id=f"TEST-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                         conditions=selected_conditions if selected_conditions else [],
-                        allergies=[a for a in selected_allergies if a != "None"],
+                        allergies=selected_allergies if selected_allergies else [],
                         prescription=selected_drugs,
                         conflicts=conflicts
                     )

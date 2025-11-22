@@ -6,8 +6,12 @@ drug-drug,Aspirin,Clopidogrel,Major,Monitor for bleeding; avoid long-term combin
 drug-drug,Ibuprofen,Clopidogrel,Moderate,Avoid NSAIDs with antiplatelet; prefer Paracetamol,Increased bleeding risk
 drug-drug,Naproxen,Clopidogrel,Moderate,Avoid NSAIDs with antiplatelet; prefer Paracetamol,Increased bleeding risk
 drug-drug,Warfarin,Rivaroxaban,Major,Never combine anticoagulants,Severe bleeding risk
+drug-drug,Aspirin,Rivaroxaban,Moderate,Monitor for bleeding; avoid combination if possible,Increased bleeding risk
+drug-drug,Ibuprofen,Rivaroxaban,Moderate,Avoid NSAIDs with anticoagulants,Increased bleeding risk
+drug-drug,Naproxen,Rivaroxaban,Moderate,Avoid NSAIDs with anticoagulants,Increased bleeding risk
 drug-condition,Hypertension,Ibuprofen,Moderate,Prefer Paracetamol; avoid NSAIDs if uncontrolled BP,May raise blood pressure
 drug-condition,Hypertension,Naproxen,Moderate,Prefer Paracetamol; avoid NSAIDs,May raise blood pressure
+drug-condition,Hypertension,Aspirin,Moderate,Monitor blood pressure; use low-dose if needed for cardioprotection,May raise blood pressure slightly
 drug-condition,PenicillinAllergy,Penicillin,Major,Use non-penicillin antibiotic such as Azithromycin,Anaphylaxis risk
 drug-condition,PenicillinAllergy,Amoxicillin,Major,Use non-penicillin antibiotic such as Azithromycin,Cross-reactivity with penicillin
 drug-condition,AspirinAllergy,Aspirin,Major,Use Paracetamol or other non-NSAID analgesic,Anaphylaxis or severe reaction risk
@@ -38,3 +42,4 @@ drug-drug,Diphenhydramine,Lorazepam,Moderate,Avoid combination if possible,Exces
 drug-condition,Anxiety,Diphenhydramine,Minor,May increase anxiety in some patients,Paradoxical effect possible
 drug-condition,GERD,Aspirin,Moderate,Use enteric-coated or avoid; prefer Paracetamol,May worsen GERD symptoms
 drug-condition,GERD,Ibuprofen,Moderate,Avoid NSAIDs; use Paracetamol with PPI,May worsen GERD symptoms
+drug-condition,GERD,Naproxen,Moderate,Avoid NSAIDs; use Paracetamol with PPI,May worsen GERD symptoms

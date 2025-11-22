@@ -11,6 +11,11 @@ id,name,conditions,allergies
 10,Jennifer Taylor,Anticoagulation;Pain,Penicillin;Ibuprofen
 11,James Thomas,Heart Failure;Hypertension,None
 12,Mary Garcia,Hypothyroidism;Depression,None
-13,Christopher Lee,Infection;Diabetes,Penicillin
+13,Christopher Lee,Infection,Penicillin
 14,Patricia White,Neuropathy;Anxiety,None
 15,Daniel Harris,Inflammation;Asthma,Aspirin
+16,William Clark,Anticoagulation;High Cholesterol,None
+17,Susan Martinez,Hypertension;Pain,None
+18,Richard Lewis,Anticoagulation;Infection,None
+19,Karen Walker,Heart Failure;Pain,None
+20,Thomas Hall,GERD;Pain,None

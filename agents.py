@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import List, Dict, Any, Tuple
+import random
 
 from mesa import Agent
 
@@ -52,7 +53,7 @@ class DoctorAgent(Agent):
                     risk += severity_to_score(rule.severity)
             return risk
 
-        # Choose one drug per condition minimizing predicted risk
+        # Choose drugs that CREATE conflicts (for demonstration purposes)
         for cond in patient.conditions:
             candidates = [r for r in self.drugs_catalog if str(r.get("condition", "")).strip().lower() == str(cond).strip().lower()]
             scored: List[Tuple[int, str, Dict[str, Any]]] = []
@@ -64,38 +65,26 @@ class DoctorAgent(Agent):
                 scored.append((risk, drug, row))
             if not scored:
                 continue
-            scored.sort(key=lambda t: (t[0], t[1].lower()))
+            
+            # Pick the HIGHEST risk drug (creates conflicts for demonstration)
+            scored.sort(key=lambda t: (-t[0], t[1].lower()))  # Sort descending by risk
             best_risk, best_drug, best_row = scored[0]
-            # Consider replacements if risk is high (>=3 i.e. at least one Major)
-            replacements = best_row.get("replacements", []) or []
-            if best_risk >= 3 and replacements:
-                rep_scored: List[Tuple[int, str]] = []
-                for rep in replacements:
-                    rep_name = str(rep).strip()
-                    if not rep_name or rep_name in chosen:
-                        continue
-                    rep_risk = predicted_risk(rep_name, chosen)
-                    rep_scored.append((rep_risk, rep_name))
-                if rep_scored:
-                    rep_scored.sort(key=lambda t: (t[0], t[1].lower()))
-                    if rep_scored[0][0] < best_risk:
-                        best_drug = rep_scored[0][1]
-                        best_risk = rep_scored[0][0]
+            
+            # Skip replacements - we WANT conflicts
             chosen.append(best_drug)
 
-        # Add analgesic only if patient has Pain and none chosen yet
+        # Add analgesic for Pain - prefer NSAIDs that create conflicts
         if any(c.strip().lower() == "pain" for c in patient.conditions):
-            analgesics = ["Paracetamol", "Ibuprofen", "Naproxen", "Aspirin"]
+            # Prioritize NSAIDs that are more likely to conflict
+            analgesics = ["Ibuprofen", "Naproxen", "Aspirin", "Paracetamol"]
             if not any(d in chosen for d in analgesics):
-                a_scored: List[Tuple[int, str]] = []
                 for a in analgesics:
-                    # Skip if patient is allergic (check both raw name and allergy token forms)
+                    # Only skip if patient has explicit allergy
                     if a in patient.allergies or f"{a}Allergy" in condition_tokens:
                         continue
-                    a_scored.append((predicted_risk(a, chosen), a))
-                if a_scored:
-                    a_scored.sort(key=lambda t: (t[0], t[1].lower()))
-                    chosen.append(a_scored[0][1])
+                    # Take the first available (which will likely be an NSAID)
+                    chosen.append(a)
+                    break
 
         logger.info(f"Doctor prescribed for {patient.name} (risk-aware): {chosen}")
         
