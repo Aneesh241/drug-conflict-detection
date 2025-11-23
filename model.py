@@ -12,9 +12,11 @@ from utils import load_patients, load_drugs, load_rules, logger, conflicts_to_fr
 
 
 class HealthcareModel(Model):
-    def __init__(self, data_dir: Path | str):
+    def __init__(self, data_dir: Path | str, doctor_mode: str = "smart"):
         super().__init__()
         self.data_dir = Path(data_dir)
+        self.doctor_mode = doctor_mode  # "smart" or "conflict-prone"
+        
         # Load data
         self.patients_rows = load_patients(self.data_dir / "patients.csv")
         self.drugs_rows = load_drugs(self.data_dir / "drugs.csv")
@@ -25,7 +27,7 @@ class HealthcareModel(Model):
 
         # Agents
         self.rule_engine = RuleEngineAgent(self, self.rules_rows)
-        self.doctor = DoctorAgent(self, self.drugs_rows)
+        self.doctor = DoctorAgent(self, self.drugs_rows, mode=doctor_mode)
         self.pharmacist = PharmacistAgent(self, self.rule_engine)
 
         self.schedule.add(self.rule_engine)

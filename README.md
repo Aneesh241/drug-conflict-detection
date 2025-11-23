@@ -50,11 +50,11 @@ The **Drug Conflict Detection System** is an intelligent healthcare AI prototype
 
 ---
 
-## ✨ Key Features
+### ✨ Key Features
 
 ### 🤖 **Intelligent Agent System**
 - **PatientAgent**: Manages patient profile (conditions, allergies, prescriptions)
-- **DoctorAgent**: Risk-aware prescribing with conflict avoidance logic
+- **DoctorAgent**: Two modes - Smart (conflict-avoiding) & Demo (conflict-prone)
 - **PharmacistAgent**: Validates prescriptions against safety rules
 - **RuleEngineAgent**: Knowledge base query and conflict detection engine
 
@@ -335,23 +335,84 @@ python -c "import mesa, streamlit, pydantic, bcrypt; print('✅ All core package
 
 ## 💻 Usage
 
+### Simulation Modes
+
+The system supports **two distinct simulation modes** for different use cases:
+
+#### 🧠 Smart Doctor Mode (Default)
+**Purpose:** Intelligent, conflict-avoiding prescribing for real-world clinical use
+
+**Features:**
+- ✅ **Zero Conflicts Guarantee**: Actively avoids ALL drug interactions
+- ✅ **Allergy Checking**: Automatically excludes allergenic drugs
+- ✅ **Replacement Logic**: Uses alternative drugs when primary choice conflicts
+- ✅ **Safety First**: Skips conditions if no safe drug available
+
+**Algorithm:**
+1. **First Pass**: Find conflict-free drugs for each condition
+2. **Second Pass**: Try replacement drugs if conflicts exist
+3. **Final Decision**: Skip condition rather than prescribe conflicting drug
+
+**Results:**
+- **0 conflicts** (guaranteed safe prescriptions)
+- No allergy violations
+- Some conditions may be left untreated for safety
+
+#### ⚠️ Demo Mode (Conflict-Prone)
+**Purpose:** Educational demonstration of poor prescribing and conflict detection
+
+**Features:**
+- ⚠️ **Intentional Conflicts**: Deliberately creates drug interactions
+- ⚠️ **Allergy Violations**: May prescribe allergenic drugs
+- ⚠️ **System Testing**: Validates conflict detection works correctly
+
+**Results:**
+- **5-10 conflicts** typical (including Major severity)
+- Demonstrates worst-case scenarios
+- Shows system's detection capabilities
+
+#### Mode Comparison
+
+| Feature | Smart Mode | Demo Mode |
+|---------|-----------|-----------|
+| **Conflicts** | 0 (guaranteed) | 5-10 typical |
+| **Allergy Checking** | ✅ Yes | ❌ No |
+| **Replacement Drugs** | ✅ Yes | ❌ No |
+| **Use Case** | Production/Training | Testing/Education |
+
+---
+
 ### Option 1: Command-Line Interface (CLI)
 
 **Fast batch processing for headless environments:**
 
 ```powershell
-python main.py
+# Smart mode (default - zero conflicts)
+python main.py --mode smart
+
+# Demo mode (creates conflicts for demonstration)
+python main.py --mode conflict-prone
 ```
 
-**Output:**
+**Smart Mode Output:**
 ```
-=== Simulation Summary ===
-Total prescriptions: 5
-Conflicts detected: 12
+🏥 Running simulation in SMART mode...
+Mode: SMART
+Total prescriptions: 20
+Conflicts detected: 0
+✅ No conflicts found! (Safe prescriptions)
+```
+
+**Demo Mode Output:**
+```
+🏥 Running simulation in CONFLICT-PRONE mode...
+Mode: CONFLICT-PRONE
+Total prescriptions: 20
+Conflicts detected: 8
 By severity:
-  - Major: 4
+  - Major: 2
   - Moderate: 6
-  - Minor: 2
+  - Minor: 0
 
 Report saved to: output\conflicts.csv
 ```
@@ -460,8 +521,9 @@ streamlit run app.py
 - Role-based permission display
 
 #### Quick Actions (Sidebar)
-- **Run Simulation**: Execute full agent workflow (all roles with permission)
-- **Last Run**: Timestamp of last simulation
+- **🔄 Run Smart Simulation**: Execute intelligent conflict-avoiding prescriptions (0 conflicts)
+- **🔄 Run Demo Simulation**: Execute conflict-prone mode for testing/education (shows conflicts)
+- **Last Run**: Timestamp and mode of last simulation
 - **Logout**: End session securely
 
 ---
@@ -1436,11 +1498,17 @@ If you intend to open source formally, add a LICENSE file (e.g. MIT). Currently 
 ---
 ### Quick Command Reference
 ```powershell
-# CLI run
-python main.py
+# CLI run - Smart mode (zero conflicts)
+python main.py --mode smart
+
+# CLI run - Demo mode (creates conflicts)
+python main.py --mode conflict-prone
 
 # Streamlit dashboard
 streamlit run app.py
+
+# Run tests
+pytest tests/ -v
 
 # Optional plotting
 python -c "import pandas as pd; from utils import plot_severity_distribution as p; p(pd.read_csv('output/conflicts.csv'))"

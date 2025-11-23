@@ -23,11 +23,125 @@ class PatientAgent(Agent):
 
 
 class DoctorAgent(Agent):
-    def __init__(self, model, drugs_catalog: List[Dict[str, Any]]):
+    def __init__(self, model, drugs_catalog: List[Dict[str, Any]], mode: str = "smart"):
         super().__init__("doctor", model)
         self.drugs_catalog = drugs_catalog
+        self.mode = mode  # "smart" or "conflict-prone"
 
     def prescribe(self, patient: PatientAgent) -> List[str]:
+        if self.mode == "smart":
+            return self._prescribe_smart(patient)
+        else:
+            return self._prescribe_conflict_prone(patient)
+
+    def _prescribe_smart(self, patient: PatientAgent) -> List[str]:
+        """Smart prescribing: avoid conflicts, use replacements, check allergies"""
+        chosen: List[str] = []
+        condition_tokens = make_condition_tokens(patient.conditions, patient.allergies)
+        
+        def has_conflict(drug: str, current_rx: List[str]) -> Tuple[bool, int]:
+            """Check if drug creates conflicts and return risk score"""
+            risk = 0
+            dl = drug.lower()
+            kb = self.model.rule_engine.kb
+            
+            # Check drug-drug conflicts
+            for existing in current_rx:
+                a, b = sorted([existing.lower(), dl])
+                key = ("drug-drug", a, b)
+                rule = kb.get(key)
+                if rule:
+                    risk += severity_to_score(rule.severity)
+            
+            # Check drug-condition conflicts
+            for ct in condition_tokens:
+                key = ("drug-condition", ct.lower(), dl)
+                rule = kb.get(key)
+                if rule:
+                    risk += severity_to_score(rule.severity)
+            
+            return risk > 0, risk
+        
+        def is_allergic(drug: str) -> bool:
+            """Check if patient is allergic to drug"""
+            drug_lower = drug.lower()
+            return any(
+                drug_lower in str(a).lower() or str(a).lower() in drug_lower
+                for a in patient.allergies
+                if str(a).lower() not in ['none', 'nan', '']
+            )
+        
+        # Prescribe for each condition
+        for cond in patient.conditions:
+            candidates = [
+                r for r in self.drugs_catalog 
+                if str(r.get("condition", "")).strip().lower() == str(cond).strip().lower()
+            ]
+            
+            if not candidates:
+                continue
+            
+            # Try to find a conflict-free drug
+            best_drug = None
+            best_row = None
+            
+            # First pass: try drugs without conflicts
+            for row in candidates:
+                drug = str(row.get("drug", "")).strip()
+                if not drug or drug in chosen:
+                    continue
+                
+                # Skip if allergic
+                if is_allergic(drug):
+                    continue
+                
+                has_conf, risk = has_conflict(drug, chosen)
+                
+                if not has_conf:
+                    best_drug = drug
+                    best_row = row
+                    break
+            
+            # Second pass: if all drugs have conflicts, try replacements
+            if best_drug is None:
+                for row in candidates:
+                    drug = str(row.get("drug", "")).strip()
+                    if not drug or drug in chosen or is_allergic(drug):
+                        continue
+                    
+                    # Check if this drug has conflict-free replacements
+                    replacements = row.get("replacements", [])
+                    if replacements and isinstance(replacements, list):
+                        for replacement in replacements:
+                            replacement = str(replacement).strip()
+                            if not replacement or replacement in chosen:
+                                continue
+                            
+                            if is_allergic(replacement):
+                                continue
+                            
+                            has_conf, _ = has_conflict(replacement, chosen)
+                            if not has_conf:
+                                best_drug = replacement
+                                best_row = row
+                                break
+                    
+                    if best_drug:
+                        break
+            
+            # Third pass: if still no conflict-free drug, SKIP this condition
+            # Smart doctor will NOT prescribe anything that creates conflicts
+            if best_drug is None:
+                logger.warning(f"Smart Doctor: No conflict-free drug found for {patient.name}'s {cond}. Skipping this condition.")
+                continue
+            
+            chosen.append(best_drug)
+        
+        logger.info(f"Smart Doctor prescribed for {patient.name}: {chosen} (conflict-free)")
+        return chosen
+    
+    def _prescribe_conflict_prone(self, patient: PatientAgent) -> List[str]:
+        """Conflict-prone prescribing: intentionally creates conflicts for demonstration"""
         chosen: List[str] = []
         condition_tokens = make_condition_tokens(patient.conditions, patient.allergies)
 
@@ -63,26 +177,10 @@ class DoctorAgent(Agent):
             
             # Pick the HIGHEST risk drug (creates conflicts for demonstration)
             scored.sort(key=lambda t: (-t[0], t[1].lower()))  # Sort descending by risk
-            best_risk, best_drug, best_row = scored[0]
-            
-            # Skip replacements - we WANT conflicts
+            best_drug = scored[0][1]
             chosen.append(best_drug)
 
-        # Add analgesic for Pain - prefer NSAIDs that create conflicts
-        if any(c.strip().lower() == "pain" for c in patient.conditions):
-            # Prioritize NSAIDs that are more likely to conflict
-            analgesics = ["Ibuprofen", "Naproxen", "Aspirin", "Paracetamol"]
-            if not any(d in chosen for d in analgesics):
-                for a in analgesics:
-                    # Only skip if patient has explicit allergy
-                    if a in patient.allergies or f"{a}Allergy" in condition_tokens:
-                        continue
-                    # Take the first available (which will likely be an NSAID)
-                    chosen.append(a)
-                    break
-
-        logger.info(f"Doctor prescribed for {patient.name} (risk-aware): {chosen}")
-        
+        logger.info(f"Conflict-Prone Doctor prescribed for {patient.name}: {chosen} (with conflicts)")
         return chosen
 
     def step(self):

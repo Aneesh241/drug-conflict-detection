@@ -43,6 +43,8 @@ if 'conflicts_df' not in st.session_state:
     st.session_state.conflicts_df = None
 if 'simulation_run' not in st.session_state:
     st.session_state.simulation_run = False
+if 'simulation_mode' not in st.session_state:
+    st.session_state.simulation_mode = 'smart'
 if 'custom_data_uploaded' not in st.session_state:
     st.session_state.custom_data_uploaded = False
 if 'custom_patients' not in st.session_state:
@@ -192,8 +194,12 @@ def save_uploaded_file(uploaded_file, file_type):
     except Exception as e:
         return False, f"Error uploading {file_type}: {str(e)}"
 
-def run_simulation():
-    """Run the drug conflict detection simulation"""
+def run_simulation(mode: str = "smart"):
+    """Run the drug conflict detection simulation
+    
+    Args:
+        mode: "smart" for conflict-avoiding or "conflict-prone" for demonstration
+    """
     base_dir = Path(__file__).parent
     
     # Save custom data to temporary CSV files if uploaded
@@ -231,17 +237,18 @@ def run_simulation():
             import shutil
             shutil.copy(base_dir / "rules.csv", temp_dir / "rules.csv")
         
-        # Run model with temp data
-        model = HealthcareModel(data_dir=temp_dir)
+        # Run model with temp data and specified mode
+        model = HealthcareModel(data_dir=temp_dir, doctor_mode=mode)
     else:
-        # Run model with default data
-        model = HealthcareModel(data_dir=base_dir)
+        # Run model with default data and specified mode
+        model = HealthcareModel(data_dir=base_dir, doctor_mode=mode)
     
     model.run(steps=1)
     
     st.session_state.model = model
     st.session_state.conflicts_df = model.conflicts_dataframe()
     st.session_state.simulation_run = True
+    st.session_state.simulation_mode = mode
     st.session_state.last_run = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def get_severity_color(severity):
@@ -350,14 +357,25 @@ with st.sidebar:
     
     # Only show run simulation if user has permission
     if has_permission(Permission.RUN_SIMULATION):
-        if st.button("🔄 Run Simulation", use_container_width=True, type="primary"):
-            with st.spinner("Running simulation..."):
-                run_simulation()
-            st.success("Simulation completed!")
+        st.markdown("**🧠 Smart Doctor Mode**")
+        st.caption("Avoids conflicts, uses replacements")
+        if st.button("🔄 Run Smart Simulation", use_container_width=True, type="primary"):
+            with st.spinner("Running smart simulation..."):
+                run_simulation(mode="smart")
+            st.success("✅ Smart Simulation completed!")
+            st.rerun()
+        
+        st.markdown("**⚠️ Demo Mode (Conflict-Prone)**")
+        st.caption("Intentionally creates conflicts")
+        if st.button("🔄 Run Demo Simulation", use_container_width=True, type="secondary"):
+            with st.spinner("Running demo simulation..."):
+                run_simulation(mode="conflict-prone")
+            st.success("⚠️ Demo Simulation completed!")
             st.rerun()
     
     if st.session_state.simulation_run:
-        st.info(f"Last run: {st.session_state.last_run}")
+        mode_label = "🧠 Smart" if st.session_state.get('simulation_mode', 'smart') == "smart" else "⚠️ Demo"
+        st.info(f"Last run: {st.session_state.last_run}\nMode: {mode_label}")
 
 # Main content area
 st.markdown('<div class="main-header">💊 Drug Conflict Detection System</div>', unsafe_allow_html=True)
