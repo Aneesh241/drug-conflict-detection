@@ -1450,25 +1450,4 @@ python -c "import pandas as pd; from utils import plot_severity_distribution as 
 Focus improvements on rule coverage, extensible schema, and test automation.
 
 ---
-
-## 📞 Contact & Support
-
-- **Repository**: [github.com/Aneesh241/drug-conflict-detection](https://github.com/Aneesh241/drug-conflict-detection)
-- **Issues**: Report bugs or request features via GitHub Issues
-- **Documentation**: This README and inline code comments
-
----
-
-## 🎓 Academic Context
-
-**Educational Project - Artificial Intelligence Course (SEM 3)**
-- Demonstrates: Multi-agent systems, search algorithms, data-driven AI
-- Technologies: MESA framework, BFS/A* search, Python, Streamlit
-- Focus: Healthcare informatics, clinical decision support prototyping
-
----
-
-<div align="center">
-  <p><strong>Built with ❤️ for AI coursework | November 2025</strong></p>
-  <p><em>Remember: This is an educational prototype. Always consult qualified healthcare professionals for real medical decisions.</em></p>
-</div>
+Feel free to open issues or request enhancements.
