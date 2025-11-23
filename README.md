@@ -193,7 +193,7 @@ drug_conflict_detection/
 │
 ├── 📊 Data & Reports
 │   ├── data_models.py             # Pydantic validation models (Patient/Drug/Rule)
-│   ├── report_generator.py       # PDF and Word report generation (reportlab, python-docx)
+│   ├── report_generator.py        # PDF and Word report generation (reportlab, python-docx)
 │   ├── patients.csv               # Sample patient dataset (id, name, conditions, allergies)
 │   ├── drugs.csv                  # Drug catalog (drug, condition, category, replacements)
 │   ├── rules.csv                  # Conflict rules (type, item_a, item_b, severity, recommendation)
@@ -215,16 +215,11 @@ drug_conflict_detection/
 │   └── output/
 │       └── conflicts.csv           # Generated conflict reports (gitignored)
 │
-├── ⚙️ Configuration
-│   ├── requirements.txt            # Python dependencies
-│   ├── .gitignore                  # Git ignore patterns
-│   └── README.md                   # This file
-│
-└── 🗑️ Artifacts (Safe to Delete)
-    ├── __pycache__/                # Python bytecode cache
-    ├── .pytest_cache/              # Pytest cache
-    ├── .venv/                      # Virtual environment (local)
-    └── temp_data/                  # Temporary data uploads (created by app.py)
+└── ⚙️ Configuration
+    ├── requirements.txt            # Python dependencies
+    ├── .gitignore                  # Git ignore patterns
+    └── README.md                   # This file
+
 ```
 
 ### File Sizes & Complexity
