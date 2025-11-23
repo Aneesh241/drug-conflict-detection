@@ -1,21 +1,21 @@
 id,name,conditions,allergies
-1,John Doe,Hypertension;Diabetes,Penicillin
-2,Jane Smith,Infection,None
-3,Bob Lee,Hypertension,None
-4,Sarah Johnson,Hypertension;High Cholesterol,Sulfa
-5,Michael Brown,Diabetes;Heart Failure,None
-6,Emily Davis,Depression;Anxiety,None
-7,Robert Wilson,Asthma;Allergies,Aspirin
-8,Lisa Anderson,Arthritis;Hypertension,None
-9,David Martinez,GERD;Diabetes,None
-10,Jennifer Taylor,Anticoagulation;Pain,Penicillin;Ibuprofen
-11,James Thomas,Heart Failure;Hypertension,None
-12,Mary Garcia,Hypothyroidism;Depression,None
-13,Christopher Lee,Infection,Penicillin
-14,Patricia White,Neuropathy;Anxiety,None
-15,Daniel Harris,Inflammation;Asthma,Aspirin
-16,William Clark,Anticoagulation;High Cholesterol,None
-17,Susan Martinez,Hypertension;Pain,None
-18,Richard Lewis,Anticoagulation;Infection,None
-19,Karen Walker,Heart Failure;Pain,None
-20,Thomas Hall,GERD;Pain,None
+1,John Doe,"['[\'[""[\\\'Hypertension\\\', \\\'Diabetes\\\']""]\']']","['[\'[""[\\\'Penicillin\\\']""]\']']"
+2,Jane Smith,"['[\'[""[\\\'Infection\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+3,Bob Lee,"['[\'[""[\\\'Hypertension\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+4,Sarah Johnson,"['[\'[""[\\\'Hypertension\\\', \\\'High Cholesterol\\\']""]\']']","['[\'[""[\\\'Sulfa\\\']""]\']']"
+5,Michael Brown,"['[\'[""[\\\'Diabetes\\\', \\\'Heart Failure\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+6,Emily Davis,"['[\'[""[\\\'Depression\\\', \\\'Anxiety\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+7,Robert Wilson,"['[\'[""[\\\'Asthma\\\', \\\'Allergies\\\']""]\']']","['[\'[""[\\\'Aspirin\\\']""]\']']"
+8,Lisa Anderson,"['[\'[""[\\\'Arthritis\\\', \\\'Hypertension\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+9,David Martinez,"['[\'[""[\\\'GERD\\\', \\\'Diabetes\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+10,Jennifer Taylor,"['[\'[""[\\\'Anticoagulation\\\', \\\'Pain\\\']""]\']']","['[\'[""[\\\'Penicillin\\\', \\\'Ibuprofen\\\']""]\']']"
+11,James Thomas,"['[\'[""[\\\'Heart Failure\\\', \\\'Hypertension\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+12,Mary Garcia,"['[\'[""[\\\'Hypothyroidism\\\', \\\'Depression\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+13,Christopher Lee,"['[\'[""[\\\'Infection\\\']""]\']']","['[\'[""[\\\'Penicillin\\\']""]\']']"
+14,Patricia White,"['[\'[""[\\\'Neuropathy\\\', \\\'Anxiety\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+15,Daniel Harris,"['[\'[""[\\\'Inflammation\\\', \\\'Asthma\\\']""]\']']","['[\'[""[\\\'Aspirin\\\']""]\']']"
+16,William Clark,"['[\'[""[\\\'Anticoagulation\\\', \\\'High Cholesterol\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+17,Susan Martinez,"['[\'[""[\\\'Hypertension\\\', \\\'Pain\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+18,Richard Lewis,"['[\'[""[\\\'Anticoagulation\\\', \\\'Infection\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+19,Karen Walker,"['[\'[""[\\\'Heart Failure\\\', \\\'Pain\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"
+20,Thomas Hall,"['[\'[""[\\\'GERD\\\', \\\'Pain\\\']""]\']']","['[\'[""[\\\'nan\\\']""]\']']"

@@ -119,7 +119,7 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
     },
     
     Role.PHARMACIST: {
-        # View and verify, no prescription rights
+        # Pharmacist with drug database management rights
         Permission.VIEW_DASHBOARD,
         Permission.VIEW_PATIENTS,
         Permission.VIEW_DRUGS,
@@ -128,6 +128,10 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
         Permission.VIEW_REPORTS,
         Permission.VIEW_ANALYTICS,
         Permission.VIEW_VISUALIZATIONS,
+        
+        Permission.ADD_DRUG,
+        Permission.EDIT_DRUG,
+        Permission.DELETE_DRUG,
         
         Permission.GENERATE_REPORT,
         Permission.EXPORT_DATA,

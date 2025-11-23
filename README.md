@@ -297,9 +297,9 @@ The system creates default accounts on first launch:
 
 | Username | Password | Role | Permissions |
 |----------|----------|------|-------------|
-| `admin` | `Admin@123` | Admin | Full system access, user management |
-| `doctor` | `Doctor@123` | Doctor | Can prescribe, view reports, run simulations |
-| `pharmacist` | `Pharma@123` | Pharmacist | View-only, can generate reports |
+| `admin` | `Admin@123` | Admin | Full system access, user management, CRUD operations on all data |
+| `doctor` | `Doctor@123` | Doctor | Can prescribe, view reports, run simulations, manage patients |
+| `pharmacist` | `Pharma@123` | Pharmacist | Can manage drug database, view-only for other data |
 
 **⚠️ Security Notice**: Change default passwords immediately in production!
 
@@ -308,16 +308,19 @@ The system creates default accounts on first launch:
 #### Admin
 - Full access to all pages and features
 - User management (add/delete users, change passwords)
+- **CRUD Operations**: Add, edit, and delete patients, drugs, and rules
 - System settings and configuration
 - View audit logs (when enabled)
 
 #### Doctor
-- View and edit patient information
+- **Patient Management**: Add and edit patient information
 - Run simulations and prescribe drugs
 - Generate and export reports
 - Access all analytics and visualizations
+- Import patient data
 
 #### Pharmacist
+- **Drug Database Management**: Add, edit, and delete drugs
 - View patient and drug information
 - Review conflicts and rules
 - Generate reports
@@ -378,6 +381,47 @@ The system creates default accounts on first launch:
 5. **Monitor Access**: Review user activity in audit logs (when enabled)
 6. **Secure Environment**: Use HTTPS in production deployments
 7. **Data Backup**: Regularly backup `users.json` and patient data
+
+### Data Management Features
+
+#### CRUD Operations
+The system provides full Create, Read, Update, Delete (CRUD) functionality for all data types:
+
+**Patient Management** (Admin + Doctor):
+- **Add Patient**: Create new patient records with ID, name, conditions, and allergies
+- **Edit Patient**: Modify existing patient information
+- **Delete Patient**: Remove patient records (Admin only)
+- Form validation prevents duplicate IDs and ensures required fields
+- Conditions and allergies entered as multi-line text (one per line)
+
+**Drug Database Management** (Admin + Pharmacist):
+- **Add Drug**: Add new drugs with name, condition, category, and optional replacements
+- **Edit Drug**: Update drug information including replacement suggestions
+- **Delete Drug**: Remove drugs from the database (Admin + Pharmacist)
+- Duplicate drug name detection
+- Replacements stored as semicolon-separated strings
+
+**Rules Engine Management** (Admin only):
+- **Add Rule**: Create new conflict detection rules
+  - Select type: drug-drug or drug-condition
+  - Choose severity: Minor, Moderate, or Major
+  - Provide item pairs and recommendations
+- **Edit Rule**: Modify existing rules
+- **Delete Rule**: Remove rules from the system
+- Duplicate rule detection based on type and items
+
+#### Data Persistence
+- All changes immediately saved to CSV files
+- No database required - simple file-based storage
+- Changes reflected in real-time across all pages
+- Data integrity maintained through validation
+
+#### User Interface
+- Permission-based button visibility (users only see actions they can perform)
+- Inline forms for add/edit operations
+- Cancel buttons to abort operations
+- Success/error messages for user feedback
+- Dropdown selectors for editing existing records
 
 ### Technical Implementation
 - **Password Hashing**: bcrypt with salt (cost factor 12)

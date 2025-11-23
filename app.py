@@ -8,6 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 import json
+import time
 
 from model import HealthcareModel
 from agents import PatientAgent
@@ -476,6 +477,201 @@ elif page == "Patients":
     
     patients_data, _, _ = load_data()
     
+    # Action buttons (only for Admin and Doctor)
+    if has_permission(Permission.ADD_PATIENT) or has_permission(Permission.EDIT_PATIENT):
+        col1, col2, col3 = st.columns([1, 1, 4])
+        
+        with col1:
+            if has_permission(Permission.ADD_PATIENT):
+                if st.button("➕ Add Patient", type="primary"):
+                    st.session_state.show_add_patient = True
+        
+        with col2:
+            if has_permission(Permission.EDIT_PATIENT):
+                if st.button("✏️ Edit Patient"):
+                    st.session_state.show_edit_patient = True
+        
+        st.divider()
+    
+    # Add Patient Form
+    if st.session_state.get('show_add_patient', False):
+        with st.form("add_patient_form"):
+            st.subheader("Add New Patient")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                new_id = st.number_input("Patient ID", min_value=1, step=1, value=len(patients_data) + 1)
+                new_name = st.text_input("Name", placeholder="John Doe")
+            
+            with col2:
+                new_conditions = st.text_area("Conditions (one per line)", placeholder="Hypertension\nDiabetes")
+                new_allergies = st.text_area("Allergies (one per line)", placeholder="Penicillin\nSulfa drugs")
+            
+            col_submit, col_cancel = st.columns([1, 5])
+            with col_submit:
+                submit = st.form_submit_button("Add Patient", type="primary")
+            with col_cancel:
+                cancel = st.form_submit_button("Cancel")
+            
+            if submit:
+                if not new_name:
+                    st.error("Patient name is required")
+                else:
+                    # Check for duplicate ID
+                    if any(p['id'] == new_id for p in patients_data):
+                        st.error(f"Patient ID {new_id} already exists")
+                    else:
+                        # Process conditions and allergies
+                        conditions_list = [c.strip() for c in new_conditions.split('\n') if c.strip()]
+                        allergies_list = [a.strip() for a in new_allergies.split('\n') if a.strip()]
+                        
+                        if not conditions_list:
+                            conditions_list = ['None']
+                        if not allergies_list:
+                            allergies_list = ['None']
+                        
+                        # Add to patients data
+                        new_patient = {
+                            'id': new_id,
+                            'name': sanitize_string(new_name),
+                            'conditions': ';'.join(conditions_list),
+                            'allergies': ';'.join(allergies_list)
+                        }
+                        
+                        # Save to CSV
+                        patients_df_save = pd.DataFrame(patients_data + [new_patient])
+                        patients_df_save.to_csv('patients.csv', index=False)
+                        
+                        st.success(f"✅ Patient '{new_name}' added successfully!")
+                        time.sleep(2)
+                        st.session_state.show_add_patient = False
+                        st.rerun()
+            
+            if cancel:
+                st.session_state.show_add_patient = False
+                st.rerun()
+        
+        st.divider()
+    
+    # Edit Patient Form
+    if st.session_state.get('show_edit_patient', False):
+        st.subheader("Edit Patient")
+        
+        patient_options = {f"{p['name']} (ID: {p['id']})": p for p in patients_data}
+        
+        # Initialize selected patient in session state if not set
+        if 'selected_patient_for_edit' not in st.session_state:
+            st.session_state.selected_patient_for_edit = list(patient_options.keys())[0]
+        
+        selected_patient_key = st.selectbox("Select Patient to Edit", 
+                                           list(patient_options.keys()),
+                                           key="patient_selector")
+        selected_patient = patient_options[selected_patient_key]
+        
+        with st.form("edit_patient_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                edit_id = st.number_input("Patient ID", value=int(selected_patient['id']), disabled=True, step=1)
+                edit_name = st.text_input("Name", value=selected_patient['name'])
+            
+            with col2:
+                # Convert list back to text for editing
+                current_conditions = selected_patient.get('conditions', [])
+                if isinstance(current_conditions, list):
+                    conditions_text = '\n'.join(current_conditions)
+                else:
+                    conditions_text = str(current_conditions).replace(';', '\n')
+                
+                current_allergies = selected_patient.get('allergies', [])
+                if isinstance(current_allergies, list):
+                    allergies_text = '\n'.join(current_allergies)
+                else:
+                    allergies_text = str(current_allergies).replace(';', '\n')
+                
+                edit_conditions = st.text_area("Conditions (one per line)", value=conditions_text)
+                edit_allergies = st.text_area("Allergies (one per line)", value=allergies_text)
+            
+            col_submit, col_delete, col_cancel = st.columns([1, 1, 4])
+            with col_submit:
+                submit = st.form_submit_button("Save Changes", type="primary")
+            with col_delete:
+                if has_permission(Permission.DELETE_PATIENT):
+                    # Check if delete confirmation is pending
+                    if st.session_state.get('confirm_delete_patient') == selected_patient['id']:
+                        confirm_delete = st.form_submit_button("⚠️ CONFIRM DELETE", type="secondary")
+                    else:
+                        delete = st.form_submit_button("🗑️ Delete", type="secondary")
+                        confirm_delete = False
+                else:
+                    delete = False
+                    confirm_delete = False
+            with col_cancel:
+                cancel = st.form_submit_button("Cancel")
+            
+            if submit:
+                if not edit_name:
+                    st.error("Patient name is required")
+                else:
+                    # Process conditions and allergies
+                    conditions_list = [c.strip() for c in edit_conditions.split('\n') if c.strip()]
+                    allergies_list = [a.strip() for a in edit_allergies.split('\n') if a.strip()]
+                    
+                    if not conditions_list:
+                        conditions_list = ['None']
+                    if not allergies_list:
+                        allergies_list = ['None']
+                    
+                    # Update patient data
+                    for p in patients_data:
+                        if p['id'] == selected_patient['id']:
+                            p['name'] = sanitize_string(edit_name)
+                            p['conditions'] = ';'.join(conditions_list)
+                            p['allergies'] = ';'.join(allergies_list)
+                            break
+                    
+                    # Save to CSV
+                    patients_df_save = pd.DataFrame(patients_data)
+                    patients_df_save.to_csv('patients.csv', index=False)
+                    
+                    st.success(f"✅ Patient '{edit_name}' updated successfully!")
+                    time.sleep(2)
+                    st.session_state.show_edit_patient = False
+                    st.rerun()
+            
+            # Handle delete button click - show confirmation
+            if 'delete' in locals() and delete and has_permission(Permission.DELETE_PATIENT):
+                st.session_state.confirm_delete_patient = selected_patient['id']
+                st.warning(f"⚠️ You are about to delete patient '{selected_patient['name']}' (ID: {selected_patient['id']}). Click 'CONFIRM DELETE' to proceed. This action cannot be undone!")
+                time.sleep(2)
+                st.rerun()
+            
+            # Handle confirm delete button click - actually delete
+            if 'confirm_delete' in locals() and confirm_delete and has_permission(Permission.DELETE_PATIENT):
+                # Remove patient
+                patients_data = [p for p in patients_data if p['id'] != selected_patient['id']]
+                
+                # Save to CSV
+                patients_df_save = pd.DataFrame(patients_data)
+                patients_df_save.to_csv('patients.csv', index=False)
+                
+                # Clear confirmation state
+                if 'confirm_delete_patient' in st.session_state:
+                    del st.session_state.confirm_delete_patient
+                
+                st.success(f"✅ Patient '{selected_patient['name']}' has been permanently deleted.")
+                time.sleep(2)
+                st.session_state.show_edit_patient = False
+                st.rerun()
+            
+            if cancel:
+                # Clear any pending delete confirmation
+                if 'confirm_delete_patient' in st.session_state:
+                    del st.session_state.confirm_delete_patient
+                st.session_state.show_edit_patient = False
+                st.rerun()
+        
+        st.divider()
+    
     # Display patients table
     st.subheader("Patient Records")
     
@@ -809,6 +1005,195 @@ elif page == "Conflicts":
 elif page == "Drug Database":
     st.header("💊 Drug Database")
     
+    # CRUD buttons (Admin only)
+    if has_permission(Permission.ADD_DRUG):
+        col1, col2, _ = st.columns([1, 1, 6])
+        with col1:
+            if st.button("➕ Add Drug", type="primary"):
+                st.session_state.show_add_drug = True
+                st.session_state.show_edit_drug = False
+                st.rerun()
+        with col2:
+            if st.button("✏️ Edit Drug"):
+                st.session_state.show_edit_drug = True
+                st.session_state.show_add_drug = False
+                st.rerun()
+        
+        st.divider()
+    
+    # Add Drug Form
+    if st.session_state.get('show_add_drug', False):
+        with st.form("add_drug_form", clear_on_submit=True):
+            st.subheader("➕ Add New Drug")
+            
+            new_drug_name = st.text_input("Drug Name*", placeholder="e.g., Aspirin")
+            new_condition = st.text_input("Condition*", placeholder="e.g., Pain")
+            new_category = st.text_input("Category*", placeholder="e.g., Painkiller")
+            new_replacements = st.text_area("Replacements (one per line)", 
+                                            placeholder="e.g., Paracetamol\nIbuprofen",
+                                            help="Optional: List alternative drugs, one per line")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                submit = st.form_submit_button("Add Drug", type="primary")
+            with col2:
+                cancel = st.form_submit_button("Cancel")
+            
+            if cancel:
+                st.session_state.show_add_drug = False
+                st.rerun()
+            
+            if submit:
+                if not new_drug_name.strip():
+                    st.error("Drug Name is required")
+                elif not new_condition.strip():
+                    st.error("Condition is required")
+                elif not new_category.strip():
+                    st.error("Category is required")
+                else:
+                    # Check for duplicate drug name - read raw CSV
+                    drugs_df = pd.read_csv('drugs.csv')
+                    if new_drug_name.strip().lower() in drugs_df['drug'].str.lower().values:
+                        st.error(f"Drug '{new_drug_name.strip()}' already exists")
+                    else:
+                        # Sanitize inputs
+                        from validation import sanitize_string
+                        
+                        # Process replacements (textarea to semicolon-separated)
+                        replacements_list = [r.strip() for r in new_replacements.split('\n') if r.strip()]
+                        replacements_str = ';'.join(replacements_list) if replacements_list else ''
+                        
+                        new_drug = {
+                            'drug': sanitize_string(new_drug_name.strip()),
+                            'condition': sanitize_string(new_condition.strip()),
+                            'category': sanitize_string(new_category.strip()),
+                            'replacements': replacements_str if replacements_str else ''
+                        }
+                        
+                        # Add to CSV
+                        drugs_df = pd.concat([drugs_df, pd.DataFrame([new_drug])], ignore_index=True)
+                        drugs_df.to_csv('drugs.csv', index=False)
+                        
+                        st.success(f"Drug '{new_drug_name}' added successfully!")
+                        time.sleep(2)
+                        st.session_state.show_add_drug = False
+                        st.rerun()
+        
+        st.divider()
+    
+    # Edit Drug Form
+    if st.session_state.get('show_edit_drug', False):
+        # Read raw CSV to keep replacements as strings
+        drugs_df_raw = pd.read_csv('drugs.csv')
+        
+        if len(drugs_df_raw) == 0:
+            st.warning("No drugs available to edit")
+            st.session_state.show_edit_drug = False
+        else:
+            drug_options = {row['drug']: row for _, row in drugs_df_raw.iterrows()}
+            selected = st.selectbox("Select Drug to Edit:", list(drug_options.keys()))
+            
+            if selected:
+                drug = drug_options[selected]
+                
+                with st.form("edit_drug_form"):
+                    st.subheader(f"✏️ Edit Drug: {drug['drug']}")
+                    
+                    original_name = st.text_input("Original Drug Name", value=drug['drug'], disabled=True,
+                                                  help="Reference - cannot be changed")
+                    edit_drug_name = st.text_input("Drug Name*", value=drug['drug'])
+                    edit_condition = st.text_input("Condition*", value=drug['condition'])
+                    edit_category = st.text_input("Category*", value=drug.get('category', ''))
+                    
+                    # Convert semicolon-separated string to newline-separated for textarea
+                    replacements = drug.get('replacements', '')
+                    if pd.isna(replacements) or replacements == '' or str(replacements).lower() == 'nan':
+                        replacements_display = ''
+                    else:
+                        replacements_display = str(replacements).replace(';', '\n')
+                    
+                    edit_replacements = st.text_area("Replacements (one per line)", 
+                                                      value=replacements_display,
+                                                      help="Optional: List alternative drugs, one per line")
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        save = st.form_submit_button("Save Changes", type="primary")
+                    with col2:
+                        cancel = st.form_submit_button("Cancel")
+                    with col3:
+                        if has_permission(Permission.DELETE_DRUG):
+                            # Check if delete confirmation is pending
+                            if st.session_state.get('confirm_delete_drug') == drug['drug']:
+                                confirm_delete = st.form_submit_button("⚠️ CONFIRM DELETE", type="secondary")
+                            else:
+                                delete = st.form_submit_button("🗑️ Delete", type="secondary")
+                                confirm_delete = False
+                        else:
+                            delete = False
+                            confirm_delete = False
+                    
+                    if cancel:
+                        # Clear any pending delete confirmation
+                        if 'confirm_delete_drug' in st.session_state:
+                            del st.session_state.confirm_delete_drug
+                        st.session_state.show_edit_drug = False
+                        st.rerun()
+                    
+                    # Handle delete button click - show confirmation
+                    if 'delete' in locals() and delete and has_permission(Permission.DELETE_DRUG):
+                        st.session_state.confirm_delete_drug = drug['drug']
+                        st.warning(f"⚠️ You are about to delete drug '{drug['drug']}'. This may affect conflict detection rules! Click 'CONFIRM DELETE' to proceed.")
+                        time.sleep(2)
+                        st.rerun()
+                    
+                    # Handle confirm delete button click - actually delete
+                    if 'confirm_delete' in locals() and confirm_delete and has_permission(Permission.DELETE_DRUG):
+                        # Delete drug
+                        drugs_df_raw = pd.read_csv('drugs.csv')
+                        drugs_df_raw = drugs_df_raw[drugs_df_raw['drug'] != drug['drug']]
+                        drugs_df_raw.to_csv('drugs.csv', index=False)
+                        
+                        # Clear confirmation state
+                        if 'confirm_delete_drug' in st.session_state:
+                            del st.session_state.confirm_delete_drug
+                        
+                        st.success(f"✅ Drug '{drug['drug']}' has been permanently deleted.")
+                        time.sleep(2)
+                        st.session_state.show_edit_drug = False
+                        st.rerun()
+                    
+                    if save:
+                        if not edit_drug_name.strip():
+                            st.error("Drug Name is required")
+                        elif not edit_condition.strip():
+                            st.error("Condition is required")
+                        elif not edit_category.strip():
+                            st.error("Category is required")
+                        else:
+                            # Sanitize inputs
+                            from validation import sanitize_string
+                            
+                            # Process replacements
+                            replacements_list = [r.strip() for r in edit_replacements.split('\n') if r.strip()]
+                            replacements_str = ';'.join(replacements_list) if replacements_list else ''
+                            
+                            # Update drug in raw CSV
+                            drugs_df_raw = pd.read_csv('drugs.csv')
+                            mask = drugs_df_raw['drug'] == drug['drug']
+                            drugs_df_raw.loc[mask, 'drug'] = sanitize_string(edit_drug_name.strip())
+                            drugs_df_raw.loc[mask, 'condition'] = sanitize_string(edit_condition.strip())
+                            drugs_df_raw.loc[mask, 'category'] = sanitize_string(edit_category.strip())
+                            drugs_df_raw.loc[mask, 'replacements'] = replacements_str if replacements_str else ''
+                            drugs_df_raw.to_csv('drugs.csv', index=False)
+                            
+                            st.success(f"Drug '{edit_drug_name}' updated successfully!")
+                            time.sleep(2)
+                            st.session_state.show_edit_drug = False
+                            st.rerun()
+        
+        st.divider()
+    
     _, drugs_data, _ = load_data()
     
     # Search
@@ -845,6 +1230,201 @@ elif page == "Drug Database":
 # ============= RULES ENGINE PAGE =============
 elif page == "Rules Engine":
     st.header("⚙️ Conflict Detection Rules")
+    
+    # CRUD buttons (Admin only)
+    if has_permission(Permission.ADD_RULE):
+        col1, col2, _ = st.columns([1, 1, 6])
+        with col1:
+            if st.button("➕ Add Rule", type="primary"):
+                st.session_state.show_add_rule = True
+                st.session_state.show_edit_rule = False
+                st.rerun()
+        with col2:
+            if st.button("✏️ Edit Rule"):
+                st.session_state.show_edit_rule = True
+                st.session_state.show_add_rule = False
+                st.rerun()
+        
+        st.divider()
+    
+    # Add Rule Form
+    if st.session_state.get('show_add_rule', False):
+        with st.form("add_rule_form", clear_on_submit=True):
+            st.subheader("➕ Add New Rule")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                new_type = st.selectbox("Type*", ["drug-drug", "drug-condition"], index=0)
+            with col2:
+                new_severity = st.selectbox("Severity*", ["Minor", "Moderate", "Major"], index=1)
+            
+            new_item_a = st.text_input("Item A*", placeholder="e.g., Aspirin (drug name)")
+            new_item_b = st.text_input("Item B*", placeholder="e.g., Warfarin (drug name) or Bleeding Disorder (condition)")
+            new_recommendation = st.text_area("Recommendation*", 
+                                              placeholder="e.g., Avoid combination. Consider alternative pain management.",
+                                              help="Describe the recommended action")
+            new_notes = st.text_area("Notes", 
+                                     placeholder="Additional information about the conflict (optional)",
+                                     help="Optional: Any additional context or information")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                submit = st.form_submit_button("Add Rule", type="primary")
+            with col2:
+                cancel = st.form_submit_button("Cancel")
+            
+            if cancel:
+                st.session_state.show_add_rule = False
+                st.rerun()
+            
+            if submit:
+                if not new_item_a.strip():
+                    st.error("Item A is required")
+                elif not new_item_b.strip():
+                    st.error("Item B is required")
+                elif not new_recommendation.strip():
+                    st.error("Recommendation is required")
+                else:
+                    # Check for duplicate rule
+                    _, _, rules_data = load_data()
+                    if any(r['type'] == new_type and r['item_a'].lower() == new_item_a.strip().lower() and r['item_b'].lower() == new_item_b.strip().lower() for r in rules_data):
+                        st.error(f"Rule for '{new_item_a}' and '{new_item_b}' already exists")
+                    else:
+                        # Sanitize inputs
+                        from validation import sanitize_string
+                        
+                        new_rule = {
+                            'type': new_type,
+                            'item_a': sanitize_string(new_item_a.strip()),
+                            'item_b': sanitize_string(new_item_b.strip()),
+                            'severity': new_severity,
+                            'recommendation': sanitize_string(new_recommendation.strip()),
+                            'notes': sanitize_string(new_notes.strip()) if new_notes.strip() else ''
+                        }
+                        
+                        # Add to CSV
+                        rules_df = pd.DataFrame(rules_data)
+                        rules_df = pd.concat([rules_df, pd.DataFrame([new_rule])], ignore_index=True)
+                        rules_df.to_csv('rules.csv', index=False)
+                        
+                        st.success(f"Rule for '{new_item_a}' & '{new_item_b}' added successfully!")
+                        time.sleep(2)
+                        st.session_state.show_add_rule = False
+                        st.rerun()
+        
+        st.divider()
+    
+    # Edit Rule Form
+    if st.session_state.get('show_edit_rule', False):
+        _, _, rules_data = load_data()
+        
+        if len(rules_data) == 0:
+            st.warning("No rules available to edit")
+            st.session_state.show_edit_rule = False
+        else:
+            rule_options = {f"{r['type']}: {r['item_a']} & {r['item_b']} ({r['severity']})": r for r in rules_data}
+            selected = st.selectbox("Select Rule to Edit:", list(rule_options.keys()))
+            
+            if selected:
+                rule = rule_options[selected]
+                
+                with st.form("edit_rule_form"):
+                    st.subheader(f"✏️ Edit Rule: {rule['item_a']} & {rule['item_b']}")
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        type_index = 0 if rule['type'] == 'drug-drug' else 1
+                        edit_type = st.selectbox("Type*", ["drug-drug", "drug-condition"], index=type_index)
+                    with col2:
+                        severity_options = ["Minor", "Moderate", "Major"]
+                        severity_index = severity_options.index(rule['severity']) if rule['severity'] in severity_options else 1
+                        edit_severity = st.selectbox("Severity*", severity_options, index=severity_index)
+                    
+                    edit_item_a = st.text_input("Item A*", value=rule['item_a'])
+                    edit_item_b = st.text_input("Item B*", value=rule['item_b'])
+                    edit_recommendation = st.text_area("Recommendation*", value=rule['recommendation'])
+                    edit_notes = st.text_area("Notes", value=rule.get('notes', ''))
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        save = st.form_submit_button("Save Changes", type="primary")
+                    with col2:
+                        cancel = st.form_submit_button("Cancel")
+                    with col3:
+                        if has_permission(Permission.DELETE_RULE):
+                            # Check if delete confirmation is pending
+                            rule_key = f"{rule['type']}_{rule['item_a']}_{rule['item_b']}"
+                            if st.session_state.get('confirm_delete_rule') == rule_key:
+                                confirm_delete = st.form_submit_button("⚠️ CONFIRM DELETE", type="secondary")
+                            else:
+                                delete = st.form_submit_button("🗑️ Delete", type="secondary")
+                                confirm_delete = False
+                        else:
+                            delete = False
+                            confirm_delete = False
+                    
+                    if cancel:
+                        # Clear any pending delete confirmation
+                        if 'confirm_delete_rule' in st.session_state:
+                            del st.session_state.confirm_delete_rule
+                        st.session_state.show_edit_rule = False
+                        st.rerun()
+                    
+                    # Handle delete button click - show confirmation
+                    if 'delete' in locals() and delete and has_permission(Permission.DELETE_RULE):
+                        rule_key = f"{rule['type']}_{rule['item_a']}_{rule['item_b']}"
+                        st.session_state.confirm_delete_rule = rule_key
+                        st.warning(f"⚠️ You are about to delete the conflict rule between '{rule['item_a']}' and '{rule['item_b']}'. This will affect conflict detection! Click 'CONFIRM DELETE' to proceed.")
+                        time.sleep(2)
+                        st.rerun()
+                    
+                    # Handle confirm delete button click - actually delete
+                    if 'confirm_delete' in locals() and confirm_delete and has_permission(Permission.DELETE_RULE):
+                        # Delete rule
+                        rules_df = pd.DataFrame(rules_data)
+                        # Remove the rule by matching type, item_a, and item_b
+                        mask = (rules_df['type'] == rule['type']) & (rules_df['item_a'] == rule['item_a']) & (rules_df['item_b'] == rule['item_b'])
+                        rules_df = rules_df[~mask]
+                        rules_df.to_csv('rules.csv', index=False)
+                        
+                        # Clear confirmation state
+                        if 'confirm_delete_rule' in st.session_state:
+                            del st.session_state.confirm_delete_rule
+                        
+                        st.success(f"✅ Rule for '{rule['item_a']}' & '{rule['item_b']}' has been permanently deleted.")
+                        time.sleep(2)
+                        st.session_state.show_edit_rule = False
+                        st.rerun()
+                    
+                    if save:
+                        if not edit_item_a.strip():
+                            st.error("Item A is required")
+                        elif not edit_item_b.strip():
+                            st.error("Item B is required")
+                        elif not edit_recommendation.strip():
+                            st.error("Recommendation is required")
+                        else:
+                            # Sanitize inputs
+                            from validation import sanitize_string
+                            
+                            # Update rule
+                            rules_df = pd.DataFrame(rules_data)
+                            # Find the rule by matching original type, item_a, and item_b
+                            mask = (rules_df['type'] == rule['type']) & (rules_df['item_a'] == rule['item_a']) & (rules_df['item_b'] == rule['item_b'])
+                            rules_df.loc[mask, 'type'] = edit_type
+                            rules_df.loc[mask, 'item_a'] = sanitize_string(edit_item_a.strip())
+                            rules_df.loc[mask, 'item_b'] = sanitize_string(edit_item_b.strip())
+                            rules_df.loc[mask, 'severity'] = edit_severity
+                            rules_df.loc[mask, 'recommendation'] = sanitize_string(edit_recommendation.strip())
+                            rules_df.loc[mask, 'notes'] = sanitize_string(edit_notes.strip()) if edit_notes.strip() else ''
+                            rules_df.to_csv('rules.csv', index=False)
+                            
+                            st.success(f"Rule '{edit_item_a} & {edit_item_b}' updated successfully!")
+                            time.sleep(2)
+                            st.session_state.show_edit_rule = False
+                            st.rerun()
+        
+        st.divider()
     
     _, _, rules_data = load_data()
     
