@@ -100,7 +100,7 @@ The **Drug Conflict Detection System** is an intelligent healthcare AI prototype
 ### High-Level Data Flow
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Data Sources (CSV Files)                     │
+│                     Data Sources (CSV Files)                    │
 ├─────────────┬──────────────────┬──────────────────┬─────────────┤
 │ patients.csv│  drugs.csv       │  rules.csv       │ users.json  │
 │ (Profiles)  │  (Catalog)       │  (Conflicts)     │ (Auth)      │
@@ -126,8 +126,8 @@ The **Drug Conflict Detection System** is an intelligent healthcare AI prototype
         │ PatientAgent │ │DoctorAgent │ │RuleEngine    │
         │              │ │(Prescribe) │ │Agent         │
         └──────┬───────┘ └─────┬──────┘ └──────┬───────┘
-               │               │                │
-               │    ┌──────────▼────────────────┘
+               │               │               │
+               │    ┌──────────▼───────────────┘
                │    │   PharmacistAgent
                │    │   (Validate via BFS)
                └────┼────────┐
@@ -1066,29 +1066,29 @@ class PharmacistAgent(Agent):
 │ HealthcareModel.step()                               │
 ├──────────────────────────────────────────────────────┤
 │                                                      │
-│  for patient in model.patients:                     │
+│  for patient in model.patients:                      │
 │                                                      │
-│    ┌─────────────────────────────────────┐          │
-│    │ 1. Doctor.prescribe(patient)        │          │
-│    │    ↓                                │          │
-│    │    - Match drugs to conditions      │          │
-│    │    - Predict risk for each drug     │          │
-│    │    - Return prescription            │          │
-│    └───────────┬─────────────────────────┘          │
+│    ┌─────────────────────────────────────┐           │
+│    │ 1. Doctor.prescribe(patient)        │           │
+│    │    ↓                                │           │
+│    │    - Match drugs to conditions      │           │
+│    │    - Predict risk for each drug     │           │
+│    │    - Return prescription            │           │
+│    └───────────┬─────────────────────────┘           │
 │                ▼                                     │
-│    patient.prescription = [drug1, drug2, ...]       │
+│    patient.prescription = [drug1, drug2, ...]        │
 │                ▼                                     │
-│    ┌─────────────────────────────────────┐          │
-│    │ 2. Pharmacist.validate(patient, rx) │          │
-│    │    ↓                                │          │
-│    │    RuleEngine.check_conflicts()     │          │
-│    │    ↓                                │          │
-│    │    BFS Search (A*)                  │          │
-│    │    ↓                                │          │
-│    │    Return conflicts                 │          │
-│    └───────────┬─────────────────────────┘          │
+│    ┌─────────────────────────────────────┐           │
+│    │ 2. Pharmacist.validate(patient, rx) │           │
+│    │    ↓                                │           │
+│    │    RuleEngine.check_conflicts()     │           │
+│    │    ↓                                │           │
+│    │    BFS Search (A*)                  │           │
+│    │    ↓                                │           │
+│    │    Return conflicts                 │           │
+│    └───────────┬─────────────────────────┘           │
 │                ▼                                     │
-│    model.conflict_logs.append({...})                │
+│    model.conflict_logs.append({...})                 │
 │                                                      │
 └──────────────────────────────────────────────────────┘
 ```
