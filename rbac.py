@@ -51,6 +51,7 @@ class Permission(Enum):
     PRESCRIBE_DRUGS = "prescribe_drugs"
     GENERATE_REPORT = "generate_report"
     EXPORT_DATA = "export_data"
+    IMPORT_DATA = "import_data"
     
     # Admin permissions
     MANAGE_USERS = "manage_users"
@@ -88,6 +89,7 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
         Permission.PRESCRIBE_DRUGS,
         Permission.GENERATE_REPORT,
         Permission.EXPORT_DATA,
+        Permission.IMPORT_DATA,
         
         Permission.MANAGE_USERS,
         Permission.CHANGE_SETTINGS,
@@ -113,6 +115,7 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
         Permission.PRESCRIBE_DRUGS,
         Permission.GENERATE_REPORT,
         Permission.EXPORT_DATA,
+        Permission.IMPORT_DATA,
     },
     
     Role.PHARMACIST: {
@@ -141,7 +144,7 @@ PAGE_PERMISSIONS: Dict[str, Permission] = {
     "Drug Database": Permission.VIEW_DRUGS,
     "Rules Engine": Permission.VIEW_RULES,
     "Manual Testing": Permission.PRESCRIBE_DRUGS,
-    "Import Data": Permission.ADD_DRUG,  # Requires admin/data modification rights
+    "Import Data": Permission.IMPORT_DATA,
     "Visualizations": Permission.VIEW_VISUALIZATIONS,
 }
 
