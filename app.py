@@ -13,10 +13,6 @@ import time
 from model import HealthcareModel
 from agents import PatientAgent
 from utils import load_patients, load_drugs, load_rules, build_rules_kb, get_conflicts_cached
-from advanced_viz import (
-    create_interaction_network, create_3d_conflict_scatter,
-    create_sankey_diagram, create_heatmap_matrix, enhance_chart_interactivity
-)
 from auth import (
     initialize_session_state as init_auth_session,
     is_authenticated, authenticate_user, logout_user, get_current_user,
@@ -331,7 +327,7 @@ with st.sidebar:
     st.divider()
     
     # Get accessible pages for current role
-    all_pages = ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data", "Visualizations"]
+    all_pages = ["Dashboard", "Patients", "Prescription Simulator", "Conflicts", "Drug Database", "Rules Engine", "Manual Testing", "Import Data"]
     accessible_pages = []
     
     for pg in all_pages:
@@ -1907,119 +1903,6 @@ drug-condition,Hypertension,Ibuprofen,Moderate,Prefer Paracetamol,May raise BP""
             st.session_state.simulation_run = False
             st.success("All data reset to defaults!")
             st.rerun()
-
-# ============= VISUALIZATIONS PAGE =============
-elif page == "Visualizations":
-    st.header("📊 Advanced Visualizations")
-    
-    if not st.session_state.simulation_run:
-        st.info("⚠️ Please run a simulation first to generate visualizations.")
-        st.stop()
-    
-    df = st.session_state.conflicts_df
-    
-    if df.empty:
-        st.success("✅ No conflicts detected! All prescriptions are safe.")
-        st.stop()
-    
-    # Tabs for different visualization types
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🕸️ Network Graph", 
-        "📊 3D Analysis", 
-        "🔄 Flow Diagram", 
-        "🔥 Heatmap"
-    ])
-    
-    with tab1:
-        st.subheader("Drug Interaction Network")
-        st.write("Interactive network showing relationships between drugs and conditions. "
-                 "Node size = number of connections. Edge color = conflict severity.")
-        
-        conflicts_list = df.to_dict('records')
-        network_fig = create_interaction_network(conflicts_list)
-        st.plotly_chart(network_fig, use_container_width=True)
-        
-        st.info("💡 **Tip**: Hover over nodes to see details. Drugs with more connections pose higher risk.")
-    
-    with tab2:
-        st.subheader("3D Conflict Analysis")
-        st.write("Three-dimensional view of conflicts by index, severity score, and severity level. "
-                 "Rotate and zoom to explore the data.")
-        
-        scatter_3d = create_3d_conflict_scatter(df)
-        st.plotly_chart(scatter_3d, use_container_width=True)
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Total Conflicts", len(df))
-        with col2:
-            avg_score = df['score'].mean()
-            st.metric("Avg Severity Score", f"{avg_score:.2f}")
-        with col3:
-            major_count = len(df[df['severity'] == 'Major'])
-            st.metric("Major Conflicts", major_count)
-    
-    with tab3:
-        st.subheader("Prescription Flow Diagram")
-        st.write("Sankey diagram showing flow from prescriptions through drugs to conflicts. "
-                 "Width indicates frequency.")
-        
-        # Build simplified prescription data
-        prescriptions = {}
-        sankey_fig = create_sankey_diagram(conflicts_list, prescriptions)
-        st.plotly_chart(sankey_fig, use_container_width=True)
-        
-        st.info("💡 **Tip**: Wider flows indicate more frequent conflict pathways.")
-    
-    with tab4:
-        st.subheader("Drug-Drug Interaction Heatmap")
-        st.write("Matrix view showing which drugs conflict with each other. "
-                 "Color intensity = severity level.")
-        
-        heatmap_fig = create_heatmap_matrix(df)
-        st.plotly_chart(heatmap_fig, use_container_width=True)
-        
-        # Legend
-        st.markdown("""
-        **Color Legend:**
-        - 🟡 Yellow = Minor conflict
-        - 🟠 Orange = Moderate conflict  
-        - 🔴 Red = Major conflict
-        """)
-    
-    # Download visualizations data
-    st.divider()
-    st.subheader("📥 Export Visualization Data")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        # Export conflict graph as JSON
-        graph_data = {
-            'nodes': df['item_a'].tolist() + df['item_b'].tolist(),
-            'edges': df[['item_a', 'item_b', 'severity', 'score']].to_dict('records')
-        }
-        st.download_button(
-            label="Download Graph Data (JSON)",
-            data=json.dumps(graph_data, indent=2),
-            file_name="conflict_graph.json",
-            mime="application/json"
-        )
-    
-    with col2:
-        # Export summary statistics
-        stats = {
-            'total_conflicts': len(df),
-            'by_severity': df['severity'].value_counts().to_dict(),
-            'by_type': df['type'].value_counts().to_dict(),
-            'avg_score': float(df['score'].mean()),
-            'max_score': int(df['score'].max())
-        }
-        st.download_button(
-            label="Download Stats (JSON)",
-            data=json.dumps(stats, indent=2),
-            file_name="conflict_stats.json",
-            mime="application/json"
-        )
 
 # ============= USER MANAGEMENT PAGE (Admin Only) =============
 elif page == "User Management":

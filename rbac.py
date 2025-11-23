@@ -31,7 +31,6 @@ class Permission(Enum):
     VIEW_REPORTS = "view_reports"
     VIEW_SIMULATION = "view_simulation"
     VIEW_ANALYTICS = "view_analytics"
-    VIEW_VISUALIZATIONS = "view_visualizations"
     
     # Data operations
     ADD_PATIENT = "add_patient"
@@ -71,7 +70,6 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
         Permission.VIEW_REPORTS,
         Permission.VIEW_SIMULATION,
         Permission.VIEW_ANALYTICS,
-        Permission.VIEW_VISUALIZATIONS,
         
         Permission.ADD_PATIENT,
         Permission.EDIT_PATIENT,
@@ -106,7 +104,6 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
         Permission.VIEW_REPORTS,
         Permission.VIEW_SIMULATION,
         Permission.VIEW_ANALYTICS,
-        Permission.VIEW_VISUALIZATIONS,
         
         Permission.ADD_PATIENT,
         Permission.EDIT_PATIENT,
@@ -127,7 +124,6 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
         Permission.VIEW_CONFLICTS,
         Permission.VIEW_REPORTS,
         Permission.VIEW_ANALYTICS,
-        Permission.VIEW_VISUALIZATIONS,
         
         Permission.ADD_DRUG,
         Permission.EDIT_DRUG,
@@ -149,7 +145,6 @@ PAGE_PERMISSIONS: Dict[str, Permission] = {
     "Rules Engine": Permission.VIEW_RULES,
     "Manual Testing": Permission.PRESCRIBE_DRUGS,
     "Import Data": Permission.IMPORT_DATA,
-    "Visualizations": Permission.VIEW_VISUALIZATIONS,
 }
 
 
@@ -384,7 +379,6 @@ def get_permission_description(permission: Permission) -> str:
         Permission.VIEW_REPORTS: "View and access reports",
         Permission.VIEW_SIMULATION: "View simulation results",
         Permission.VIEW_ANALYTICS: "View analytics and insights",
-        Permission.VIEW_VISUALIZATIONS: "View advanced visualizations",
         
         Permission.ADD_PATIENT: "Add new patients",
         Permission.EDIT_PATIENT: "Edit patient information",
