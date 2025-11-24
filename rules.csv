@@ -43,3 +43,28 @@ drug-condition,Anxiety,Diphenhydramine,Minor,May increase anxiety in some patien
 drug-condition,GERD,Aspirin,Moderate,Use enteric-coated or avoid; prefer Paracetamol,May worsen GERD symptoms
 drug-condition,GERD,Ibuprofen,Moderate,Avoid NSAIDs; use Paracetamol with PPI,May worsen GERD symptoms
 drug-condition,GERD,Naproxen,Moderate,Avoid NSAIDs; use Paracetamol with PPI,May worsen GERD symptoms
+drug-drug,Amlodipine,Simvastatin,Minor,Monitor for muscle pain; generally safe combination,Slight increase in statin levels
+drug-drug,Lisinopril,Metformin,Minor,Monitor renal function periodically,Generally safe combination
+drug-drug,Atenolol,Insulin,Minor,Monitor blood glucose; may mask hypoglycemia symptoms,Beta blockers can affect glucose metabolism
+drug-drug,Metoprolol,Metformin,Minor,Monitor blood glucose,May affect glucose metabolism
+drug-drug,Losartan,Hydrochlorothiazide,Minor,Monitor blood pressure and electrolytes,Generally safe and often combined
+drug-drug,Amlodipine,Atorvastatin,Minor,Monitor for muscle pain,Slight increase in statin levels
+drug-drug,Lisinopril,Amlodipine,Minor,Monitor blood pressure,Additive blood pressure lowering effect
+drug-drug,Metformin,Simvastatin,Minor,Monitor liver function,Generally safe combination
+drug-drug,Atorvastatin,Amlodipine,Minor,Monitor for muscle symptoms,Slight increase in statin exposure
+drug-drug,Cetirizine,Loratadine,Minor,Avoid duplication; choose one antihistamine,Unnecessary duplication of therapy
+drug-drug,Omeprazole,Lansoprazole,Minor,Avoid duplication; choose one PPI,Unnecessary duplication of therapy
+drug-drug,Fluoxetine,Sertraline,Minor,Avoid combining SSRIs; choose one,Risk of serotonin syndrome
+drug-drug,Ibuprofen,Naproxen,Minor,Avoid combining NSAIDs; choose one,Increased GI and bleeding risk
+drug-drug,Aspirin,Naproxen,Minor,Avoid combining NSAIDs when possible,Increased GI side effects
+drug-drug,Alprazolam,Lorazepam,Minor,Avoid combining benzodiazepines,Excessive sedation and dependence risk
+drug-condition,Hypertension,Amlodipine,Minor,Monitor blood pressure regularly,May cause ankle swelling
+drug-condition,Diabetes,Metformin,Minor,Monitor renal function and B12 levels,Generally first-line and safe
+drug-condition,High Cholesterol,Simvastatin,Minor,Monitor liver enzymes and muscle symptoms,Generally safe and effective
+drug-condition,Anxiety,Fluoxetine,Minor,May increase anxiety initially,Usually improves after 2-4 weeks
+drug-condition,Depression,Alprazolam,Minor,Not first-line for depression; prefer antidepressants,Benzodiazepines don't treat underlying depression
+drug-condition,Pain,Prednisone,Minor,Not ideal for chronic pain management,Anti-inflammatory but not primary analgesic
+drug-condition,Infection,Prednisone,Minor,May mask infection symptoms; monitor closely,Immunosuppressive effect
+drug-condition,Allergies,Prednisone,Minor,Effective but reserve for severe allergic reactions,Potent but has side effects
+drug-condition,Arthritis,Ibuprofen,Minor,Monitor for GI side effects with chronic use,Effective but use lowest effective dose
+drug-condition,Inflammation,Aspirin,Minor,Effective for inflammation; monitor GI tolerance,Use appropriate anti-inflammatory dose
