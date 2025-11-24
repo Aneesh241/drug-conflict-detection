@@ -1,5 +1,6 @@
 # Python
 __pycache__/
+.pytest_cache
 *.py[cod]
 *$py.class
 *.so
@@ -42,4 +43,5 @@ temp_data/
 Thumbs.db
 
 # Output
+output/
 output/*.csv

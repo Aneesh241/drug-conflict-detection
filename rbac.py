@@ -112,7 +112,6 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
         Permission.PRESCRIBE_DRUGS,
         Permission.GENERATE_REPORT,
         Permission.EXPORT_DATA,
-        Permission.IMPORT_DATA,
     },
     
     Role.PHARMACIST: {
