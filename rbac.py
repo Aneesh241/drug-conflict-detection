@@ -128,6 +128,7 @@ ROLE_PERMISSIONS: Dict[Role, Set[Permission]] = {
         Permission.EDIT_DRUG,
         Permission.DELETE_DRUG,
         
+        Permission.RUN_SIMULATION,
         Permission.GENERATE_REPORT,
         Permission.EXPORT_DATA,
     }
