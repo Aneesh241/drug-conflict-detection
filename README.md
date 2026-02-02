@@ -1479,7 +1479,7 @@ pytest tests/test_report_generator.py -v         # Report generation tests (17)
 Place new tests in `tests/` directory. Use fixtures from `conftest.py` for model setup.
 
 ## ⚕️ Medical Disclaimer
-This repository is for **educational and prototyping purposes only**. It does **not** provide medical advice and must **not** be used for real clinical decision making. Always consult qualified healthcare professionals.
+This repository is for **educational and prototyping purposes only**. It does **not** provide medical advice and must **not** be used for real clinical decision making. Always consult qualified healthcare professionals .
 
 ## 🤝 Contributing
 1. Create a feature branch (`git checkout -b feature/name`).
